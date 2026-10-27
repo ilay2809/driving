@@ -1,0 +1,110 @@
+{
+  "id": "L10",
+  "order": 10,
+  "title": "נסיעה לאחור ופניית פרסה",
+  "subtitle": "רוורס ישר לאורך המדרכה, פרסה בסוף רחוב ופרסה בצומת",
+  "summary": "ברחוב האלון הדרומי — רחוב ללא מוצא — מתרגלים נסיעה לאחור בקו ישר עם תצפית נכונה, פניית פרסה בסוף הרחוב, פניית פרסה בצומת מול תנועה, ורוורס לאורך המדרכה עד 40 ס״מ.",
+  "minutes": 12,
+  "prerequisites": ["L09"],
+  "spawnId": "tg_parking",
+  "world": "training-ground",
+  "traffic": { "density": 0.1, "pedestrians": 0.2, "seed": 110 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "נסיעה לאחור",
+      "text": "רק כשאין ברירה, למרחק קצר, במהירות הליכה. **האחריות כולה על הנהג.**\n\nרגל על הבלם, R, הגוף מסתובב ימינה, יד שמאל בראש ההגה, **המבט דרך החלון האחורי** — ומדי כמה שניות מבט קדימה. ברכב אוטומטי מתקדמים על הזחילה בלבד.",
+      "signs": ["623"]
+    },
+    {
+      "title": "פניית פרסה — מתי מותר",
+      "text": "כשרואים את הדרך לשני הכיוונים, כשאין תמרור אוסר (430/431, 203, 428/429 מעל רמזור) ואין קו רצוף, **מהנתיב השמאלי ביותר**, עם איתות שמאלה, וזכות קדימה לכולם — גם למי שבא מאחור.\n\nרחוב צר? פנייה בשלוש נקודות עם רוורס קצר.",
+      "signs": ["430", "431", "211", "212", "803"]
+    },
+    {
+      "title": "מה הבוחן בודק",
+      "text": "ברוורס: תצפית מתמשכת לאחור, מהירות נמוכה, קו ישר במרחק קבוע מהמדרכה, ובלי לפגוע באבן השפה.\n\nבפרסה: בחירת מקום חוקי ובטוח, סדר מראה–איתות–כתף, ושליטה — בלי לעלות על המדרכה הנגדית.",
+      "signs": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "to_dead_end",
+      "title": "נסיעה לסוף הרחוב",
+      "say": ["נוסעים דרומה ברחוב האלון: ישר דרך השדרה (תן זכות קדימה), ישר בצומת הבא, ועד סוף הרחוב — רחוב ללא מוצא. שם עוצרים."],
+      "instruction": "דרומה עד סוף רחוב האלון, עצירה",
+      "navigateTo": { "junctionId": "n23", "via": ["n21", "n22"] },
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n23", "radius": 22 }, { "kind": "stopped", "seconds": 1 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה" }, { "kind": "say", "text": "בלמתי. בחציית השדרה — פער משני הכיוונים.", "priority": 3 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "HESITATION"],
+      "onDone": ["סוף הרחוב. נתחיל ברוורס."]
+    },
+    {
+      "id": "reverse_straight",
+      "title": "נסיעה לאחור בקו ישר",
+      "say": ["רגל על הבלם, R. מסובבים את הגוף ימינה, יד שמאל על ההגה, מבט דרך החלון האחורי — ונותנים לרכב לזחול לאחור חמישה-עשר מטר, ישר, במרחק קבוע מהמדרכה."],
+      "instruction": "R → מבט לאחור → 15 מ׳ ישר לאחור, לאט",
+      "done": { "kind": "reversed", "metres": 15 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["KERB_STRIKE", "KERB_MOUNT"] }, "do": [{ "kind": "say", "text": "המדרכה. תיקוני הגה קטנים ומוקדמים — ההגה לכיוון שאליו רוצים שהחלק האחורי ילך.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["LANE_DEPARTURE"] }, "do": [{ "kind": "say", "text": "סוטים מהקו. הביטו רחוק לאחור, לא על הפגוש.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["WRONG_GEAR"] }, "do": [{ "kind": "say", "text": "לרוורס — R, ורק כשהרכב עצור לגמרי.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_ACCELERATION"] }, "do": [{ "kind": "say", "text": "בלי גז — הזחילה מספיקה. הבלם שולט.", "priority": 1 }] }
+      ],
+      "focus": ["KERB_STRIKE", "KERB_MOUNT", "WRONG_GEAR", "LANE_DEPARTURE", "HARSH_ACCELERATION"],
+      "onDone": ["רוורס ישר ונקי. עוצרים, D."]
+    },
+    {
+      "id": "uturn_dead_end",
+      "title": "פניית פרסה בסוף הרחוב",
+      "say": ["עכשיו פרסה בסוף הרחוב: איתות שמאלה, מבט לשני הכיוונים ולכתף, הגה מלא שמאלה במהירות הליכה. אם לא מספיק רחב — עוצרים, רוורס קצר עם הגה ימינה, וממשיכים."],
+      "instruction": "פניית פרסה בסוף הרחוב (בשלוש נקודות אם צריך)",
+      "done": { "kind": "passed_junction", "junctionId": "n23", "turn": "uturn" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["KERB_MOUNT"] }, "do": [{ "kind": "say", "text": "עלינו על המדרכה. בפעם הבאה — עצירה לפני המדרכה ורוורס קצר.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "איתות שמאלה גם לפרסה.", "priority": 1 }] }
+      ],
+      "focus": ["KERB_MOUNT", "KERB_STRIKE", "NO_INDICATOR_TURN"],
+      "onDone": ["הסתובבנו. צפונה, לצומת האלון/החצב."]
+    },
+    {
+      "id": "uturn_junction",
+      "title": "פניית פרסה בצומת",
+      "say": ["בצומת הבא פרסה שמאלה: איתות שמאלה מוקדם, צמוד לקו האמצע, וזכות קדימה לכולם — לרכב ממול, למי שבא מהצד, ולהולכי רגל. רק כשהכול פנוי — הגה מלא שמאלה."],
+      "instruction": "איתות שמאלה → זכות קדימה לכולם → פניית פרסה בצומת",
+      "done": { "kind": "passed_junction", "junctionId": "n22", "turn": "uturn" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n22", "radius": 55 }, "do": [{ "kind": "spawn_vehicle", "where": "oncoming", "distance": 65, "speedKmh": 30 }, { "kind": "say", "text": "רכב ממול — הוא קודם. ממתינים.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD", "LEFT_TURN_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "פרסה מול תנועה" }, { "kind": "say", "text": "בלמתי. בפרסה נותנים זכות קדימה לכולם, בלי יוצא מן הכלל.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["CUT_CORNER", "WIDE_TURN"] }, "do": [{ "kind": "say", "text": "פרסה הדוקה: מתחילים צמוד לקו האמצע, הגה מלא, מהירות הליכה.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "LEFT_TURN_NO_YIELD", "NO_INDICATOR_TURN", "KERB_MOUNT"],
+      "onDone": ["יפה. דרומה שוב — ותרגיל אחרון."]
+    },
+    {
+      "id": "reverse_kerb",
+      "title": "רוורס לאורך המדרכה",
+      "say": ["עוצרים בצד ימין. עכשיו עשרה מטר לאחור לאורך המדרכה — ישר, במרחק קבוע — ועצירה סופית עד ארבעים סנטימטר מאבן השפה, P."],
+      "instruction": "עצירה בצד → 10 מ׳ רוורס לאורך המדרכה → P ב-40 ס״מ",
+      "done": { "kind": "all", "of": [{ "kind": "reversed", "metres": 10 }, { "kind": "parked", "maxKerbDistance": 0.5, "maxAngleDeg": 8 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["KERB_STRIKE"] }, "do": [{ "kind": "say", "text": "נגיעה במדרכה — להתרחק מעט ולהמשיך.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["PARKING_TOO_FAR"] }, "do": [{ "kind": "say", "text": "רחוק מדי — ברוורס הבא קרוב יותר.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_PARKING"] }, "do": [{ "kind": "say", "text": "ישר, קרוב, מקביל. מצוין.", "priority": 1 }] }
+      ],
+      "focus": ["KERB_STRIKE", "PARKING_TOO_FAR", "PARKING_ANGLE", "WRONG_GEAR"],
+      "quiz": ["0043", "0799", "0117", "0119", "0792"],
+      "onDone": ["סיימנו את התרגילים במגרש האימונים."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["reversing", "turns_uturn", "reverse", "turning"],
+  "debrief": [
+    "רוורס: לאט, עם הבלם, הראש מסובב אחורה. פרסה: חוקי, בטוח, מהנתיב השמאלי, זכות קדימה לכולם.",
+    "אלה התמרונים שמופיעים כמעט בכל טסט — ושווה לחזור עליהם במגרש עד שהם נוחים.",
+    "מכאן יוצאים לעולם האמיתי: בשיעור הבא נוסעים בצפון תל אביב."
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "id": "L01",
+  "order": 1,
+  "title": "נסיעה ראשונה",
+  "subtitle": "יציאה לדרך, נסיעה ישרה, עצירה חלקה ועצירה בצד",
+  "summary": "הנסיעה הראשונה ברחוב שקט: יציאה מסודרת (מראה–איתות–כתף), שמירה על מרכז הנתיב, האטה הדרגתית לפני צומת, חציית צומת עם תן זכות קדימה, ועצירה בצד באזור 30.",
+  "minutes": 10,
+  "prerequisites": ["L00"],
+  "spawnId": "tg_start",
+  "world": "training-ground",
+  "traffic": { "density": 0.1, "pedestrians": 0.1, "seed": 11 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "יציאה לדרך",
+      "text": "איתות אינו מקנה זכות — מי שכבר בכביש קודם.\n\nהסדר: **מראה פנימית → מראת שמאל → איתות שמאלה → מבט לכתף שמאל → יציאה הדרגתית** → ביטול איתות.",
+      "signs": [],
+      "diagram": "mirrors_blindspot"
+    },
+    {
+      "title": "נסיעה ישרה ועצירה",
+      "text": "מביטים **רחוק קדימה** — זה מה שמיישר את ההגה. תיקונים קטנים ורכים.\n\nלעצירה חלקה: מורידים את הרגל מהגז מוקדם, לוחצים על הבלם בהדרגה ומשחררים מעט ברגע העצירה — כך הרכב לא ״מנענע״.",
+      "signs": ["301", "810"]
+    },
+    {
+      "title": "המסלול היום",
+      "text": "רחוב התמר דרומה → צומת עם ״תן זכות קדימה״ (ממשיכים ישר) → רחוב החצב: חד-סטרי, **אזור 30**, פס האטה ותחנת אוטובוס → עצירה בצד ימין אחרי התחנה.",
+      "signs": ["618", "426", "144", "505"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "prep",
+      "title": "הכנות",
+      "say": ["הסדר שלמדנו: חגורה, רגל על הבלם, התנעה, D, ושחרור בלם החניה. קחו את הזמן."],
+      "instruction": "חגורה → התנעה → D → שחרור בלם חניה",
+      "done": { "kind": "vehicle", "seatbelt": true, "engineOn": true, "gear": "D", "handbrake": false },
+      "triggers": [{ "when": { "kind": "elapsed", "seconds": 30 }, "do": [{ "kind": "hint", "text": "חגורה → בלם → התנעה → D → שחרור בלם חניה", "icon": "checklist", "seconds": 8 }] }],
+      "focus": ["SEATBELT", "HANDBRAKE_ON"],
+      "onDone": ["מוכנים."]
+    },
+    {
+      "id": "pull_out",
+      "title": "יציאה לדרך",
+      "say": [
+        "אנחנו עומדים בצד ימין של רחוב התמר. לפני שזזים: מראה פנימית, מראת שמאל, איתות שמאלה, ומבט לכתף שמאל.",
+        "כשפנוי — משחררים את הבלם, גז עדין, ויוצאים בזווית קטנה למרכז הנתיב."
+      ],
+      "instruction": "מראות → איתות שמאלה → מבט לכתף → יציאה",
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 15 }, { "kind": "glanced", "target": "left_shoulder", "withinSeconds": 40 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "יצאנו בלי מבט לכתף. הנקודה המתה מסתירה בדיוק את מה שמסוכן — בפעם הבאה מסובבים את הראש לרגע.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_LANE_CHANGE"] }, "do": [{ "kind": "say", "text": "שכחנו איתות שמאלה לפני היציאה. האיתות מספר למי שמאחור מה אנחנו עומדים לעשות.", "priority": 2 }] },
+        { "when": { "kind": "distance", "metres": 15 }, "do": [{ "kind": "hint", "text": "אם עדיין לא הבטתם לכתף שמאל — עשו זאת עכשיו", "icon": "shoulder", "seconds": 6 }] }
+      ],
+      "focus": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE", "NO_MIRROR_CHECK", "HARSH_ACCELERATION"],
+      "onDone": ["יצאנו. עכשיו ביטול איתות, ומבט רחוק קדימה."]
+    },
+    {
+      "id": "straight",
+      "title": "נסיעה ישרה",
+      "say": ["נוסעים ישר במרכז הנתיב, בערך שלושים קמ״ש. העיניים רחוק — על הצומת שבהמשך, לא על מכסה המנוע."],
+      "instruction": "שמרו על מרכז הנתיב ב-20–40 קמ״ש",
+      "done": { "kind": "speed_in_range", "min": 15, "max": 45, "seconds": 3 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["LANE_DEPARTURE"] }, "do": [{ "kind": "hint", "text": "הביטו רחוק קדימה — ההגה יתיישר לבד", "icon": "lane", "seconds": 5 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_ACCELERATION"] }, "do": [{ "kind": "say", "text": "עדין על הגז — רכב אוטומטי מגיב מהר.", "priority": 1 }] }
+      ],
+      "focus": ["LANE_DEPARTURE", "HARSH_ACCELERATION"],
+      "onDone": ["נסיעה יציבה. לפנינו הצומת."]
+    },
+    {
+      "id": "smooth_stop",
+      "title": "עצירה חלקה לפני הצומת",
+      "say": [
+        "בהמשך הרחוב צומת עם תמרור תן זכות קדימה. הפעם, לתרגול, נעצור לפניו עצירה מלאה.",
+        "מורידים את הרגל מהגז כבר עכשיו, בולמים בהדרגה, ומשחררים מעט ברגע האחרון כדי שהעצירה תהיה רכה."
+      ],
+      "instruction": "האטו בהדרגה ועצרו לפני הצומת",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n01", "radius": 16 }, { "kind": "stopped", "seconds": 1.5 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "בלימה חדה. בפעם הבאה מתחילים לבלום מוקדם יותר ובעדינות.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["APPROACHING_STOP_SIGN", "APPROACHING_CROSSING"] }, "do": [{ "kind": "highlight", "target": "stop_line", "seconds": 4 }] },
+        { "when": { "kind": "passed_junction", "junctionId": "n01", "turn": "any" }, "do": [{ "kind": "say", "text": "עברנו את הצומת בלי לעצור. לא נורא — עצרו בצד כשבטוח, ונמשיך משם.", "priority": 2 }] }
+      ],
+      "focus": ["HARSH_BRAKING", "STOP_LINE_OVERRUN", "FAILED_TO_YIELD"],
+      "onDone": ["עצירה רכה. ככה נעצור גם ברמזור ובתמרור עצור."]
+    },
+    {
+      "id": "cross",
+      "title": "חציית הצומת",
+      "say": ["תמרור תן זכות קדימה: מסתכלים שמאלה, ימינה, ושוב שמאלה. כשהשדרה פנויה — ממשיכים ישר דרומה, לרחוב התמר."],
+      "instruction": "כשפנוי — ישר דרך הצומת",
+      "navigateTo": { "junctionId": "n12", "via": ["n01"] },
+      "done": { "kind": "passed_junction", "junctionId": "n01", "turn": "straight" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "יפה, נתת זכות קדימה בזמן.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "say", "text": "הרכב בשדרה היה קודם. בתן זכות קדימה מחכים לפער ברור.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["HESITATION"] }, "do": [{ "kind": "say", "text": "הצומת פנוי — אפשר לצאת בביטחון.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "HESITATION"],
+      "onDone": ["עברנו. הרחוב מתעקל שמאלה אל רחוב החצב — רחוב חד-סטרי באזור 30."]
+    },
+    {
+      "id": "zone30_pullover",
+      "title": "רחוב החצב ועצירה בצד",
+      "say": [
+        "תמרור חד-סטרי ותמרור 30 — מורידים מהירות. בהמשך פס האטה: עוברים אותו לאט.",
+        "אחרי תחנת האוטובוס נעצור בצד ימין: מראה, איתות ימינה, האטה, קרוב לאבן השפה, ובסוף P."
+      ],
+      "instruction": "האטו ל-30, עברו את פס ההאטה, ועצרו בצד ימין אחרי התחנה (P)",
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 190 }, { "kind": "parked", "maxKerbDistance": 0.6, "maxAngleDeg": 10 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["SPEED_LIMIT_CHANGED"] }, "do": [{ "kind": "say", "text": "המהירות המותרת השתנתה — מכאן שלושים.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR", "SPEEDING_MAJOR"] }, "do": [{ "kind": "say", "text": "זה אזור 30 — פסי האטה, ילדים והולכי רגל. להוריד גז.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["ILLEGAL_STOP"] }, "do": [{ "kind": "say", "text": "לא בתחום התחנה — אבני השפה כאן אדום-צהוב. עוד כמה מטרים קדימה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["PARKING_TOO_FAR"] }, "do": [{ "kind": "say", "text": "קצת רחוק מהמדרכה. אפשר לתקן: קדימה עם הגה ימינה, ויישור.", "priority": 1 }] }
+      ],
+      "focus": ["SPEEDING_MINOR", "ILLEGAL_STOP", "PARKING_TOO_FAR", "NO_INDICATOR_TURN"],
+      "quiz": ["0738", "0739", "0866", "0865", "0163"],
+      "onDone": ["עצרנו בצד, במקום מותר. זו הייתה הנסיעה הראשונה."]
+    }
+  ],
+  "pass": { "maxMinor": 8, "maxMajor": 2, "allowCritical": false },
+  "topics": ["pulling_out", "speed_limits", "calm_zones_bumps", "parking_stopping", "mirrors", "speed"],
+  "debrief": [
+    "נסעתם! יציאה מסודרת, נסיעה ישרה, עצירה חלקה, חציית צומת ועצירה בצד.",
+    "שימו לב לשתי נקודות שחוזרות בכל טסט: מבט לכתף לפני כל יציאה, ועיניים רחוק קדימה.",
+    "בשיעור הבא נוסיף פניות ימינה ושמאלה ואת האיתות שמלווה אותן."
+  ]
+}

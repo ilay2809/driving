@@ -1,0 +1,146 @@
+{
+  "id": "L02",
+  "order": 2,
+  "title": "פניות ימינה ושמאלה ואיתות",
+  "subtitle": "איתות בזמן, נתיב נכון, פנייה צמודה ימינה ופנייה שמאלה בלי לחתוך",
+  "summary": "סיבוב במגרש עם ארבע פניות: שמאלה מצומת עם תן זכות קדימה, ימינה ברמזור, שמאלה אחרי תמרור עצור ושמאלה מצומת שקט — ובסוף נסיעה ישר וביטול האיתות.",
+  "minutes": 12,
+  "prerequisites": ["L01"],
+  "spawnId": "tg_start",
+  "world": "training-ground",
+  "traffic": { "density": 0.15, "pedestrians": 0.2, "seed": 22 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "איתות — מתי וכמה",
+      "text": "מאותתים לפני **כל** פנייה, סטייה, החלפת נתיב ויציאה — מוקדם מספיק כדי שאחרים יבינו (כ-3 שניות, 20–30 מ׳ לפני הצומת), אבל לא לפני צומת קודם.\n\nאיתות אינו מקנה זכות קדימה, ובסוף התמרון **מבטלים** אותו.",
+      "signs": []
+    },
+    {
+      "title": "פנייה ימינה",
+      "text": "מהנתיב הימני, צמוד לשפה הימנית לאורך כל הפנייה, אל הנתיב הימני של הרחוב החדש.\n\nלפני: מראה ימנית, איתות, מבט לכתף ימין (אופניים!), האטה שמאפשרת לעצור להולך רגל במעבר.",
+      "signs": ["204", "206"]
+    },
+    {
+      "title": "פנייה שמאלה",
+      "text": "מהנתיב השמאלי, דרך **מרכז הצומת** — לא חותכים דרך הנתיב הנגדי — אל הנתיב השמאלי של הרחוב החדש.\n\nזכות הקדימה לבא ממול. ממתינים בצומת עם גלגלים ישרים.",
+      "signs": ["205", "207", "809"],
+      "diagram": "left_turn_yield"
+    }
+  ],
+  "steps": [
+    {
+      "id": "prep",
+      "title": "יציאה",
+      "say": ["אותו סדר כמו תמיד: חגורה, התנעה, D, מראות, איתות, כתף — ויוצאים."],
+      "instruction": "הכנות ויציאה לדרך",
+      "done": { "kind": "all", "of": [{ "kind": "vehicle", "seatbelt": true }, { "kind": "distance", "metres": 10 }] },
+      "focus": ["SEATBELT", "NO_SHOULDER_CHECK"],
+      "onDone": ["יצאנו."]
+    },
+    {
+      "id": "left_n01",
+      "title": "שמאלה בצומת הראשון",
+      "say": [
+        "בעוד כשישים מטר צומת עם תן זכות קדימה — ונפנה בו שמאלה לשדרות הראשיים.",
+        "איתות שמאלה מוקדם, האטה, בדיקה לשני הצדדים, זכות קדימה לתנועה בשדרה — ופנייה רחבה דרך מרכז הצומת אל הנתיב השמאלי."
+      ],
+      "instruction": "איתות שמאלה → תן זכות קדימה → פנייה שמאלה לשדרה",
+      "navigateTo": { "junctionId": "n11", "via": ["n01"] },
+      "done": { "kind": "passed_junction", "junctionId": "n01", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "פנינו בלי איתות. בפנייה הבאה — איתות שלוש שניות לפני.", "priority": 2 }, { "kind": "highlight", "target": "indicator", "seconds": 4 }] },
+        { "when": { "kind": "violation", "types": ["INDICATOR_LATE"] }, "do": [{ "kind": "say", "text": "האיתות הגיע מאוחר. מאותתים כשרואים את הצומת, לא כשמסובבים.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["CUT_CORNER"] }, "do": [{ "kind": "say", "text": "חתכנו את הפינה. בשמאלה עוברים את מרכז הצומת ולא דרך הנתיב הנגדי.", "priority": 2 }, { "kind": "highlight", "target": "lane", "seconds": 4 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "יפה — נתת זכות קדימה ופנית נקי.", "priority": 1 }] }
+      ],
+      "focus": ["NO_INDICATOR_TURN", "INDICATOR_LATE", "FAILED_TO_YIELD", "CUT_CORNER"],
+      "onDone": ["אנחנו בשדרה. ביטול איתות, ומתארגנים בנתיב הימני לפנייה הבאה."]
+    },
+    {
+      "id": "right_n11",
+      "title": "ימינה ברמזור",
+      "say": [
+        "בצומת המרומזר פונים ימינה לרחוב הדקל. פנייה ימינה — מהנתיב הימני בלבד.",
+        "מראה ימנית, איתות ימינה, מבט לכתף, ובפנייה עצמה נשארים צמודים לימין. במעבר החצייה — הולכי רגל קודמים."
+      ],
+      "instruction": "נתיב ימני → איתות ימינה → פנייה צמודה",
+      "navigateTo": { "junctionId": "n12", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 75 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }, { "kind": "say", "text": "הרמזור ירוק — אבל לפני הפנייה מבט למעבר החצייה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["WRONG_LANE_FOR_TURN"] }, "do": [{ "kind": "say", "text": "פנינו ימינה מהנתיב השמאלי. החצים על הכביש קובעים: ימינה — רק מהימני.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["WIDE_TURN"] }, "do": [{ "kind": "say", "text": "הפנייה הייתה רחבה. בימינה נשארים צמודים לשפה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "הולך רגל במעבר! בפנייה הם תמיד קודמים.", "priority": 3 }] }
+      ],
+      "focus": ["WRONG_LANE_FOR_TURN", "WIDE_TURN", "PEDESTRIAN_NOT_YIELDED", "NO_INDICATOR_TURN"],
+      "onDone": ["פנייה ימינה טובה. בהמשך הרחוב תמרור עצור."]
+    },
+    {
+      "id": "stop_left_n12",
+      "title": "עצור ואז שמאלה",
+      "say": [
+        "לפנינו תמרור עצור. עצירה מוחלטת לפני הקו — גם אם נראה פנוי — ואז שמאלה לרחוב החצב.",
+        "ברחוב חד-סטרי פונים שמאלה מהנתיב השמאלי ביותר; כאן יש נתיב אחד, אז פשוט שמאלה אחרי העצירה."
+      ],
+      "instruction": "עצירה מלאה בקו → איתות שמאלה → פנייה שמאלה",
+      "navigateTo": { "junctionId": "n22", "via": ["n12"] },
+      "done": { "kind": "passed_junction", "junctionId": "n12", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["APPROACHING_STOP_SIGN"] }, "do": [{ "kind": "say", "text": "תמרור עצור — מאטים, עצירה מלאה לפני הקו, ורק אז בודקים ופונים.", "priority": 1 }, { "kind": "highlight", "target": "stop_line", "seconds": 5 }] },
+        { "when": { "kind": "violation", "types": ["STOP_SIGN_NO_STOP"] }, "do": [{ "kind": "brake", "reason": "אי-עצירה בתמרור עצור" }, { "kind": "say", "text": "בלמתי — לא עצרנו בעצור. בטסט זה כישלון. בתמרור עצור הגלגלים מפסיקים להסתובב, תמיד.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["STOP_SIGN_ROLLING"] }, "do": [{ "kind": "say", "text": "זו הייתה עצירה מתגלגלת. עוצרים לגמרי, סופרים אחת, ואז יוצאים.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_STOP"] }, "do": [{ "kind": "say", "text": "עצירה מלאה, בדיוק לפני הקו. ככה.", "priority": 1 }] }
+      ],
+      "focus": ["STOP_SIGN_NO_STOP", "STOP_SIGN_ROLLING", "STOP_LINE_OVERRUN", "NO_INDICATOR_TURN"],
+      "onDone": ["יפה. ממשיכים ברחוב החצב מזרחה — אזור 30."]
+    },
+    {
+      "id": "left_n22",
+      "title": "שמאלה ברחוב האלון",
+      "say": ["בסוף הרחוב צומת עם תן זכות קדימה. פונים שמאלה לרחוב האלון — איתות מוקדם, זכות קדימה לתנועה משני הצדדים, ופנייה דרך מרכז הצומת."],
+      "instruction": "איתות שמאלה → תן זכות קדימה → שמאלה לרחוב האלון",
+      "navigateTo": { "junctionId": "n21", "via": ["n22"] },
+      "done": { "kind": "passed_junction", "junctionId": "n22", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "say", "text": "הרכב ברחוב האלון היה קודם — אנחנו עם תן זכות קדימה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["CUT_CORNER"] }, "do": [{ "kind": "say", "text": "שוב חיתוך פינה. דמיינו עמוד במרכז הצומת ועקפו אותו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["INDICATOR_LATE", "NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "איתות מוקדם יותר — כבר כשרואים את הצומת.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "CUT_CORNER", "INDICATOR_LATE"],
+      "onDone": ["נוסעים צפונה ברחוב האלון. בדקו שהאיתות כבוי."]
+    },
+    {
+      "id": "straight_n21",
+      "title": "ישר דרך השדרה",
+      "say": ["בצומת הבא חוצים את השדרה ישר. אנחנו עם תן זכות קדימה — ממתינים לפער משני הכיוונים. ובלי איתות: ישר זה ישר."],
+      "instruction": "תן זכות קדימה → ישר דרך השדרה",
+      "navigateTo": { "junctionId": "n20", "via": ["n21"] },
+      "done": { "kind": "passed_junction", "junctionId": "n21", "turn": "straight" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["INDICATOR_LEFT_ON"] }, "do": [{ "kind": "say", "text": "האיתות נשאר דולק מהפנייה הקודמת — מבטלים. נהג שמאחור חושב שאנחנו פונים.", "priority": 2 }, { "kind": "highlight", "target": "indicator", "seconds": 4 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בכניסה לשדרה" }, { "kind": "say", "text": "בלמתי. בחציית שדרה ראשית מחכים לפער משני הצדדים.", "priority": 3 }] }
+      ],
+      "focus": ["INDICATOR_LEFT_ON", "FAILED_TO_YIELD", "HESITATION"],
+      "onDone": ["חצינו. ממשיכים עד העיקול ועוצרים בצד."]
+    },
+    {
+      "id": "finish",
+      "title": "עצירה בצד",
+      "say": ["לפני העיקול עוצרים בצד ימין: מראה, איתות ימינה, קרוב למדרכה, P."],
+      "instruction": "עצירה בצד ימין (P)",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n20", "radius": 70 }, { "kind": "parked", "maxKerbDistance": 0.6, "maxAngleDeg": 10 }] },
+      "focus": ["PARKING_TOO_FAR", "NO_INDICATOR_TURN"],
+      "quiz": ["0107", "0781", "0165", "0753"],
+      "onDone": ["סיימנו את הסיבוב."]
+    }
+  ],
+  "pass": { "maxMinor": 8, "maxMajor": 2, "allowCritical": false },
+  "topics": ["signalling", "turns_uturn", "left_turn_yield", "stop_give_way_signs", "turning"],
+  "debrief": [
+    "ארבע פניות, כל אחת עם הסדר שלה: מראה, איתות, כתף, נתיב, זכות קדימה, פנייה, ביטול איתות.",
+    "הטעויות השכיחות היו איתות מאוחר וחיתוך פינה בשמאלה — שתיהן נעלמות עם תרגול.",
+    "בשיעור הבא נתמקד בזכות קדימה: עצור, תן זכות קדימה, ומי שבא מימין."
+  ]
+}

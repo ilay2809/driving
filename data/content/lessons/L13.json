@@ -1,0 +1,103 @@
+{
+  "id": "L13",
+  "order": 13,
+  "title": "מצבי חירום",
+  "subtitle": "עצירת חירום, רכב חירום מאחור ותקלה בדרך",
+  "summary": "באזור אפקה–גלילות מתרגלים עצירת חירום לפי פקודה (כמו בטסט), פינוי הדרך לאמבולנס שמגיע מאחור, והתנהגות נכונה בתקלה: עצירה בצד, P ואורות מצוקה.",
+  "minutes": 12,
+  "prerequisites": ["L12"],
+  "spawnId": "tlv_afeka",
+  "world": "north-tlv",
+  "traffic": { "density": 0.3, "pedestrians": 0.2, "seed": 113 },
+  "hour": 11,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "עצירת חירום",
+      "text": "מותרת רק למניעת תאונה. כשצריך: בלם **חזק ורצוף** (ה-ABS עושה את העבודה — לא ״מפמפמים״), הגה ישר בשתי ידיים, בלי גז. אחרי העצירה: בלם חניה, אורות מצוקה, מבט במראה.\n\nבטסט הבוחן מתרה מראש ואומר ״עצור!״ — ובודק תגובה מיידית ושליטה.",
+      "signs": []
+    },
+    {
+      "title": "רכב ביטחון",
+      "text": "אמבולנס, משטרה, כיבוי — בצופר ובאורות מהבהבים: **מטים ימינה**, מאותתים, מאטים ועוצרים אם צריך — לא בצומת ולא על מעבר. באור אדום לא נכנסים לצומת גם אם הוא צופר מאחור.\n\nמאחורי רכב ביטחון שומרים 100 מ׳.",
+      "signs": []
+    },
+    {
+      "title": "תקלה ותאונה",
+      "text": "תקלה: החוצה מנתיב הנסיעה, אורות מצוקה, בדרך לא עירונית אפוד זוהר ומשולש אזהרה 100 מ׳ מאחור. נקר תוך נסיעה — הגה חזק, מרפים מהגז, בולמים רך.\n\nתאונה: עוצרים, מאבטחים, עזרה ראשונה, 100/101/102.",
+      "signs": ["150", "151"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "brief",
+      "title": "תדריך עצירת חירום",
+      "say": ["בהמשך הנסיעה אגיד ״עצור!״ — כמו הבוחן בטסט. ברגע הזה: בלם מלא, הגה ישר, בלי להסתכל במראות. מוכנים? לחצו ׳המשך׳ ונצא."],
+      "instruction": "קראו את התדריך ולחצו ׳המשך׳",
+      "done": { "kind": "acknowledged" },
+      "onDone": ["יוצאים לדרך."]
+    },
+    {
+      "id": "emergency_stop",
+      "title": "עצירת חירום",
+      "say": ["נוסעים לפי הניווט, מהירות רגילה. חכו לפקודה."],
+      "instruction": "סעו רגיל; בפקודה ״עצור!״ — בלימה מלאה, הגה ישר",
+      "navigateTo": { "spawnId": "tlv_glilot" },
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 180 }, { "kind": "stopped", "seconds": 1.5 }] },
+      "triggers": [
+        { "when": { "kind": "distance", "metres": 180 }, "do": [{ "kind": "say", "text": "עצור!", "priority": 3, "cooldown": 0 }, { "kind": "highlight", "target": "speedometer", "seconds": 3 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "הפעם בלימה חדה היא בדיוק מה שצריך.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["LANE_DEPARTURE", "CENTRE_LINE_CROSSED"] }, "do": [{ "kind": "say", "text": "הרכב סטה בבלימה — הגה ישר, שתי ידיים.", "priority": 2 }] }
+      ],
+      "focus": ["COLLISION", "LANE_DEPARTURE"],
+      "onDone": ["עצירה מיידית. בלם חניה — ועכשיו ממשיכים כרגיל: מראה, איתות, כתף."]
+    },
+    {
+      "id": "emergency_vehicle",
+      "title": "רכב חירום מאחור",
+      "say": ["ממשיכים לפי הניווט. אם תשמעו סירנה מאחור: איתות ימינה, מתפנים לימין ועוצרים — לא בתוך צומת."],
+      "instruction": "סירנה מאחור → איתות ימינה → פינוי ימינה ועצירה",
+      "navigateTo": { "spawnId": "tlv_glilot" },
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 60 }, { "kind": "stopped", "seconds": 1.5 }, { "kind": "vehicle", "indicator": "right" }] },
+      "triggers": [
+        { "when": { "kind": "distance", "metres": 60 }, "do": [{ "kind": "spawn_vehicle", "where": "behind", "distance": 90, "speedKmh": 70, "vehicle": "emergency" }, { "kind": "say", "text": "אמבולנס מאחור! איתות ימינה, מתפנים לימין, ועוצרים עד שיעבור.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["ILLEGAL_STOP"] }, "do": [{ "kind": "say", "text": "לא בצומת ולא על המעבר — קצת הלאה, ואז לעצור.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "לא בולמים בפתאומיות באמצע הנתיב — מטים ימינה בהדרגה.", "priority": 1 }] }
+      ],
+      "focus": ["ILLEGAL_STOP", "FAILED_TO_YIELD", "RED_LIGHT"],
+      "onDone": ["עבר. בודקים מראה וכתף וחוזרים לנסיעה."]
+    },
+    {
+      "id": "breakdown",
+      "title": "תקלה — אורות מצוקה",
+      "say": ["נניח שנדלקה נורת אזהרה אדומה. עוצרים בצד במקום בטוח, P, ואורות מצוקה — ארבעת המחוונים."],
+      "instruction": "עצירה בצד → P → אורות מצוקה",
+      "done": { "kind": "all", "of": [{ "kind": "stopped", "seconds": 1 }, { "kind": "vehicle", "indicator": "hazard", "gear": "P" }] },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 30 }, "do": [{ "kind": "hint", "text": "עצירה בצד → P → מקש אורות המצוקה", "icon": "hazard", "seconds": 6 }] },
+        { "when": { "kind": "violation", "types": ["ILLEGAL_STOP", "ILLEGAL_PARKING"] }, "do": [{ "kind": "say", "text": "גם בתקלה — לא בצומת ולא במעבר חצייה, אם אפשר לזחול עוד כמה מטרים.", "priority": 1 }] }
+      ],
+      "focus": ["ILLEGAL_STOP"],
+      "onDone": ["ככה נראית תקלה מטופלת: בצד, P, מצוקה. במציאות — אפוד ומשולש מחוץ לעיר."]
+    },
+    {
+      "id": "continue",
+      "title": "המשך ליעד",
+      "say": ["מכבים מצוקה, D, מראה, איתות, כתף — וממשיכים לגלילות."],
+      "instruction": "סעו ליעד",
+      "navigateTo": { "spawnId": "tlv_glilot" },
+      "done": { "kind": "reach", "spawnId": "tlv_glilot", "radius": 40 },
+      "triggers": [{ "when": { "kind": "violation", "types": ["INDICATOR_LEFT_ON"] }, "do": [{ "kind": "say", "text": "אורות המצוקה עדיין דולקים — מכבים.", "priority": 1 }] }],
+      "focus": ["INDICATOR_LEFT_ON", "NO_SHOULDER_CHECK"],
+      "quiz": ["0248", "0767", "0145", "0198", "0747"],
+      "onDone": ["הגענו."]
+    }
+  ],
+  "pass": { "maxMinor": 8, "maxMajor": 2, "allowCritical": false },
+  "topics": ["emergency_stop_breakdown", "emergency_vehicles", "emergency", "safety"],
+  "debrief": [
+    "שלושה מצבים שלא קורים כל יום — ובדיוק בגלל זה מתרגלים אותם: עצירת חירום, רכב חירום ותקלה.",
+    "בטסט, עצירת החירום היא תמרון רגיל; התגובה לאמבולנס היא בונוס שמרשים כל בוחן.",
+    "נשאר שיעור אחד: טסט פנימי."
+  ]
+}

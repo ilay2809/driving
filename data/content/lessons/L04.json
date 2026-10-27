@@ -1,0 +1,129 @@
+{
+  "id": "L04",
+  "order": 4,
+  "title": "רמזורים",
+  "subtitle": "אדום, אדום-צהוב, ירוק, ירוק מהבהב, צהוב — והולכי רגל בפנייה",
+  "summary": "בצומת המרומזר של המגרש עוברים על כל מצבי הרמזור: עצירה באדום לפני הקו, המתנה באדום-צהוב ויציאה בירוק, החלטה נכונה בירוק מהבהב ובצהוב, ופנייה ימינה בירוק כשהולכי רגל חוצים.",
+  "minutes": 12,
+  "prerequisites": ["L03"],
+  "spawnId": "tg_main_w",
+  "world": "training-ground",
+  "traffic": { "density": 0.15, "pedestrians": 0.3, "seed": 44 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "רצף האורות",
+      "text": "**אדום** — עצור לפני קו העצירה. **אדום-צהוב** — היכון, לא לזוז. **ירוק** — התקדם אחרי בדיקה שהצומת פנוי. **ירוק מהבהב** — הירוק נגמר, היערך לעצור. **צהוב** — עצור אם אפשר בבטחה; אם לא — השלם ופנה את הצומת. **צהוב מהבהב** — הרמזור לא פועל, נוהגים לפי התמרורים.",
+      "signs": ["701", "702", "703", "703f", "705", "706"]
+    },
+    {
+      "title": "איפה עוצרים",
+      "text": "לפני **קו העצירה** וסמוך אליו; אם אין קו — לפני מעבר החצייה; ואם אין גם הוא — במקום שרואים את הרמזור.\n\nלא על מעבר החצייה, ולא ״חצי בצומת״. באדום-צהוב משחררים בלם חניה ומכינים את הרגל — אבל מחכים לירוק.",
+      "signs": ["810", "811"],
+      "diagram": "stop_line_order"
+    },
+    {
+      "title": "ירוק אינו ״סע״",
+      "text": "ירוק פירושו ״מותר״ — אחרי שבדקנו שהצומת פנוי ושאין הולכי רגל במעבר. בפנייה בירוק מלא: הולכי הרגל במעבר של הרחוב שאליו פונים קודמים, והפונה שמאלה נותן זכות קדימה לבא ממול.\n\nלא נכנסים לצומת אם לא נוכל לצאת ממנו — גם בירוק.",
+      "signs": ["718", "719", "704"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "red_stop",
+      "title": "אדום — עצירה לפני הקו",
+      "say": ["לפנינו הרמזור, והוא אדום. מאטים מוקדם, ועוצרים לפני קו העצירה — במרחק שעדיין רואים את הרמזור. הרגל נשארת על הבלם."],
+      "instruction": "עצירה לפני קו העצירה באדום",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n11", "radius": 24 }, { "kind": "stopped", "seconds": 1.5 }, { "kind": "vehicle", "gear": "D" }] },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "red" }] },
+        { "when": { "kind": "violation", "types": ["APPROACHING_SIGNALS"] }, "do": [{ "kind": "say", "text": "אדום — עוצרים לפני הקו, לא על מעבר החצייה.", "priority": 1 }, { "kind": "highlight", "target": "stop_line", "seconds": 5 }] },
+        { "when": { "kind": "violation", "types": ["STOP_LINE_OVERRUN"] }, "do": [{ "kind": "say", "text": "עברנו את קו העצירה. באדום עוצרים לפניו — כך רואים את הרמזור ולא חוסמים את המעבר.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["RED_LIGHT"] }, "do": [{ "kind": "brake", "reason": "כניסה לצומת באור אדום" }, { "kind": "say", "text": "בלמתי! אדום. זו הטעות החמורה ביותר שיש — בטסט, כישלון מיידי.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "בלימה חדה. ראינו את האדום מרחוק — מתחילים לבלום מוקדם.", "priority": 1 }] }
+      ],
+      "focus": ["RED_LIGHT", "STOP_LINE_OVERRUN", "HARSH_BRAKING"],
+      "onDone": ["עצורים באדום, לפני הקו. עכשיו נראה מה קורה כשהאור מתחלף."]
+    },
+    {
+      "id": "red_amber_green",
+      "title": "אדום-צהוב, ואז ירוק",
+      "say": ["אדום-צהוב: להתכונן — לא לזוז. ברגע שמופיע הירוק: מבט מהיר שהצומת פנוי, ויוצאים ישר."],
+      "instruction": "אדום-צהוב: לא זזים. ירוק: בדיקה ויציאה ישר",
+      "navigateTo": { "junctionId": "n21", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "straight" },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "red_amber" }, { "kind": "say", "text": "אדום-צהוב — הרגל על הבלם, מחכים.", "priority": 2 }] },
+        { "when": { "kind": "elapsed", "seconds": 4 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }, { "kind": "say", "text": "ירוק. הצומת פנוי? יוצאים.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["RED_AMBER_START"] }, "do": [{ "kind": "say", "text": "זזנו באדום-צהוב. זה רק ״היכון״ — יוצאים בירוק מלא.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["GREEN_NOT_MOVING"] }, "do": [{ "kind": "say", "text": "ירוק והדרך פנויה — אפשר לצאת.", "priority": 1 }] }
+      ],
+      "focus": ["RED_AMBER_START", "GREEN_NOT_MOVING"],
+      "onDone": ["יפה. עכשיו נעשה סיבוב ונחזור לרמזור מהצפון."]
+    },
+    {
+      "id": "loop_back",
+      "title": "סיבוב סביב הבלוק",
+      "say": ["בצומת הבא שמאלה לרחוב האלון, אחרי העיקול מערבה ברחוב הברוש, ובצומת הברוש/הדקל — שמאלה דרומה, חזרה לרמזור."],
+      "instruction": "שמאלה → עיקול → שמאלה ברחוב הדקל",
+      "navigateTo": { "junctionId": "n10", "via": ["n21", "n20"] },
+      "done": { "kind": "passed_junction", "junctionId": "n10", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "איתות לפני הפנייה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "say", "text": "זכות קדימה — בדקו מי קודם לפני הכניסה.", "priority": 2 }] }
+      ],
+      "focus": ["NO_INDICATOR_TURN", "FAILED_TO_YIELD"],
+      "onDone": ["מתקרבים לרמזור מהצפון. שימו לב לאור."]
+    },
+    {
+      "id": "flashing_green_amber",
+      "title": "ירוק מהבהב וצהוב",
+      "say": ["הרמזור ירוק — אבל שימו לב: אם הוא מתחיל להבהב, הירוק נגמר. ההחלטה תלויה במרחק: רחוק — מתכוננים לעצור; קרוב מאוד — ממשיכים ומפנים את הצומת."],
+      "instruction": "ירוק מהבהב → היערכות לעצירה → צהוב → עצירה לפני הקו",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n11", "radius": 22 }, { "kind": "stopped", "seconds": 1 }] },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 75 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 58 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "flashing_green" }, { "kind": "say", "text": "ירוק מהבהב — הירוק נגמר. מספיק רחוק כדי לעצור? כן. רגל מהגז.", "priority": 2 }] },
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 40 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "amber" }, { "kind": "say", "text": "צהוב — עוצרים לפני הקו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["AMBER_RUN"] }, "do": [{ "kind": "say", "text": "נכנסנו בצהוב כשאפשר היה לעצור. הירוק המהבהב הזהיר אותנו — צהוב פירושו עצור.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["RED_LIGHT"] }, "do": [{ "kind": "brake", "reason": "כניסה לצומת באור אדום" }, { "kind": "say", "text": "בלמתי — אדום.", "priority": 3 }] }
+      ],
+      "focus": ["AMBER_RUN", "RED_LIGHT", "HARSH_BRAKING"],
+      "onDone": ["נעצרנו בזמן. לא מאיצים כדי ״להספיק״ — אף פעם."]
+    },
+    {
+      "id": "green_turn_pedestrians",
+      "title": "ירוק עם הולכי רגל בפנייה",
+      "say": ["הפעם נפנה ימינה. כשיידלק הירוק — להולכי הרגל במעבר של השדרה יש ירוק גם כן. הם קודמים: עוצרים לפני המעבר ונותנים להם לסיים."],
+      "instruction": "ירוק → ימינה → זכות קדימה להולכי הרגל במעבר",
+      "navigateTo": { "junctionId": "n01", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "red" }] },
+        { "when": { "kind": "elapsed", "seconds": 3 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "red_amber" }] },
+        { "when": { "kind": "elapsed", "seconds": 4.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }, { "kind": "spawn_pedestrian", "crossingId": "c_main_w" }, { "kind": "say", "text": "ירוק. איתות ימינה — והולך רגל חוצה במעבר. הוא קודם.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! הולך רגל במעבר עם ירוק — תמיד קודם.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "נתת לו לסיים לחצות. ככה בדיוק.", "priority": 1 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS", "WRONG_LANE_FOR_TURN"],
+      "onDone": ["מערבה בשדרה — ובצומת הבא נעצור בצד."]
+    },
+    {
+      "id": "finish",
+      "title": "סיום",
+      "say": ["לפני צומת התמר עוצרים בצד ימין, במקום מותר."],
+      "instruction": "עצירה בצד לפני הצומת",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n01", "radius": 50 }, { "kind": "stopped", "seconds": 2 }] },
+      "quiz": ["1787", "1750", "1751", "0059", "0664"],
+      "onDone": ["סיימנו את שיעור הרמזורים."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 1, "allowCritical": false },
+  "topics": ["traffic_lights", "pedestrian_crossings", "junction_discipline", "signals"],
+  "debrief": [
+    "עברנו על כל מצבי הרמזור. שני דברים לזכור: ירוק מהבהב הוא ההחלטה — לא הצהוב; והולכי רגל בפנייה בירוק קודמים.",
+    "כניסה באדום היא הטעות שהבוחן לא סולח עליה — וגם הכביש לא.",
+    "בשיעור הבא: כיכרות."
+  ]
+}
