@@ -8,7 +8,7 @@ import { ScriptedAgent, ScriptedDrive, runScenario, timeToFirstStop, type Scenar
 
 const world = buildTrainingGround();
 const g = new RoadGraph(world);
-const CAR = 4.4;
+const _CAR = 4.4;
 
 describe('LanesDetector — direction and lines', () => {
   it('driving west on the one-way רחוב החצב → WRONG_WAY once per episode', () => {
