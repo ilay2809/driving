@@ -345,16 +345,30 @@ export function buildWorld(input: BuildInput): WorldFile {
     const maxW = Math.max(...c.arms.map((a) => a.width));
     c.setback = c.kind === 'bend' || c.kind === 'merge' ? 0.5 : c.kind === 'dead_end' ? Math.max(maxW / 2, 3) : maxW / 2 + 1.0;
 
-    for (const arm of c.arms) {
-      const L = roadLength.get(arm.road.id)!;
-      // approach crossing: a crossing within setback + 8 m of this node end
-      const list = crossingsByRoad.get(arm.road.id) ?? [];
-      const near = list.find((cr) => (arm.end === 'to' ? L - cr.s : cr.s) <= c.setback + 8);
-      arm.trim = c.setback;
-      if (near && c.kind !== 'bend' && c.kind !== 'merge') {
-        arm.crossing = near;
-        arm.trim = c.setback + CROSSING_GAP + CROSSING_WIDTH + STOP_LINE_GAP;
+    for (const arm of c.arms) arm.trim = c.setback;
+  }
+  // approach crossings: a crossing within setback + 8 m of a node end belongs to that arm.
+  // On a short road a crossing can be in range of BOTH ends; the nearer end claims it
+  // (claiming it from both ends used to emit the same crossing id twice).
+  {
+    const candidates: { dist: number; arm: Arm; cr: BuildCrossing; c: NodeCtx }[] = [];
+    for (const c of ctx.values()) {
+      if (c.arms.length === 0 || c.kind === 'bend' || c.kind === 'merge') continue;
+      for (const arm of c.arms) {
+        const L = roadLength.get(arm.road.id)!;
+        for (const cr of crossingsByRoad.get(arm.road.id) ?? []) {
+          const dist = arm.end === 'to' ? L - cr.s : cr.s;
+          if (dist <= c.setback + 8) candidates.push({ dist, arm, cr, c });
+        }
       }
+    }
+    candidates.sort((a, b) => a.dist - b.dist || a.c.node.id.localeCompare(b.c.node.id) || a.arm.road.id.localeCompare(b.arm.road.id) || a.arm.end.localeCompare(b.arm.end));
+    const claimed = new Set<BuildCrossing>();
+    for (const k of candidates) {
+      if (claimed.has(k.cr) || k.arm.crossing) continue;
+      claimed.add(k.cr);
+      k.arm.crossing = k.cr;
+      k.arm.trim = k.c.setback + CROSSING_GAP + CROSSING_WIDTH + STOP_LINE_GAP;
     }
   }
   for (const [roadId, list] of crossingsByRoad) {
@@ -701,6 +715,59 @@ export function buildWorld(input: BuildInput): WorldFile {
             fromLane.next.push(conn.id);
             laneById.get(toId)!.prev.push(conn.id);
           }
+        }
+      }
+    }
+
+    // fallback: a lane that received no connector at a node with exits would be a dead
+    // lane (vehicles and routing get stuck). Give it a U-turn onto its own road when
+    // possible, otherwise the best-aligned exit, ignoring lane-position / turn rules.
+    // (Real data: a two-way street ending on an inbound one-way street, or turn:lanes
+    // whose movement does not exist at this node.)
+    if (c.kind !== 'dead_end') {
+      const addFallback = (fromId: string, toId: string, turnKind: Turn): void => {
+        const e = laneEnd(fromId);
+        const s = laneStart(toId);
+        const dStraight = dist2(e.p, s.p);
+        const d = turnKind === 'uturn' ? Math.max(2, dStraight * 0.8) : Math.min(15, Math.max(1, dStraight * 0.4));
+        const n = turnKind === 'uturn' ? 12 : Math.max(4, Math.ceil(dStraight / 2));
+        const path = cubicBezier(e.p, [e.p[0] + forwardOf(e.h)[0] * d, e.p[1] + forwardOf(e.h)[1] * d], [s.p[0] - forwardOf(s.h)[0] * d, s.p[1] - forwardOf(s.h)[1] * d], s.p, n);
+        const fromLane = laneById.get(fromId)!;
+        const conn: Connector = {
+          id: `${nodeId}:${fromId}>${toId}`,
+          junctionId: nodeId,
+          fromLane: fromId,
+          toLane: toId,
+          path,
+          length: polylineLength(path),
+          turn: turnKind,
+          signalGroup: undefined,
+          yieldTo: [],
+          crossings: [],
+          maxSpeed: turnKind === 'uturn' ? 10 : Math.min(20, fromLane.maxSpeed),
+        };
+        nodeConnectors.push(conn);
+        fromLane.next.push(conn.id);
+        laneById.get(toId)!.prev.push(conn.id);
+      };
+      for (const inArm of c.arms) {
+        for (const fromId of inArm.inLaneIds) {
+          if (nodeConnectors.some((k) => k.fromLane === fromId)) continue;
+          if (inArm.outLaneIds.length > 0 && !inArm.road.oneway) {
+            addFallback(fromId, inArm.outLaneIds[0]!, 'uturn');
+            continue;
+          }
+          const e = laneEnd(fromId);
+          let best: { toId: string; turn: Turn; dev: number } | undefined;
+          for (const outArm of c.arms) {
+            if (outArm === inArm) continue;
+            for (const toId of outArm.outLaneIds) {
+              const s = laneStart(toId);
+              const dev = Math.abs(angleDiff(e.h, s.h));
+              if (!best || dev < best.dev) best = { toId, turn: classifyTurn(e.h, s.h), dev };
+            }
+          }
+          if (best && best.turn !== 'uturn') addFallback(fromId, best.toId, best.turn);
         }
       }
     }

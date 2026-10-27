@@ -1,0 +1,511 @@
+{
+  "generatedAt": "2026-10-27T13:04:36.470Z",
+  "world": "north-tlv",
+  "sources": {
+    "osmFiles": 15,
+    "osmFileNames": [
+      "tile_34.7750_32.0950_34.7950_32.1150.osm",
+      "tile_34.7750_32.1150_34.7950_32.1350.osm",
+      "tile_34.7750_32.1350_34.7950_32.1550.osm",
+      "tile_34.7950_32.0950_34.8150_32.1150.osm",
+      "tile_34.7950_32.1150_34.8150_32.1350.osm",
+      "tile_34.7950_32.1350_34.8150_32.1550.osm",
+      "tile_34.8150_32.0950_34.8350_32.1150.osm",
+      "tile_34.8150_32.1150_34.8350_32.1350.osm",
+      "tile_34.8150_32.1350_34.8350_32.1550.osm",
+      "tile_34.8350_32.0950_34.8550_32.1150.osm",
+      "tile_34.8350_32.1150_34.8550_32.1350.osm",
+      "tile_34.8350_32.1350_34.8550_32.1550.osm",
+      "tile_34.8550_32.0950_34.8750_32.1150.osm",
+      "tile_34.8550_32.1150_34.8750_32.1350.osm",
+      "tile_34.8550_32.1350_34.8750_32.1550.osm"
+    ]
+  },
+  "bbox": {
+    "minX": -4733.16,
+    "minZ": -4114.204219800364,
+    "maxX": 5893.971671307262,
+    "maxZ": 3670.7914224001283
+  },
+  "counts": {
+    "roads": 6032,
+    "lanes": 10114,
+    "junctions": 4569,
+    "connectors": 20296,
+    "signals": 359,
+    "crossings": 866,
+    "signs": 6891,
+    "parking": 2119,
+    "buildings": 14837,
+    "areas": 2616,
+    "props": 9822,
+    "spawnPoints": 13,
+    "routes": 6
+  },
+  "roadKmByClass": {
+    "primary": 26.13,
+    "residential": 210.84,
+    "service": 71.53,
+    "motorway": 68.22,
+    "secondary": 28.95,
+    "living_street": 10.17,
+    "tertiary": 78.48,
+    "unclassified": 15.83,
+    "trunk": 16.79
+  },
+  "roadKmTotal": 526.94,
+  "laneKm": 900.15,
+  "junctionKinds": {
+    "junction": 2716,
+    "dead_end": 903,
+    "roundabout": 596,
+    "bend": 221,
+    "merge": 133
+  },
+  "approachControls": {
+    "priority": 3178,
+    "give_way": 1538,
+    "right_hand_rule": 1413,
+    "none": 1319,
+    "signals": 721,
+    "roundabout_entry": 393,
+    "stop": 13
+  },
+  "signsByCode": {
+    "135": 191,
+    "144": 131,
+    "222": 198,
+    "223": 111,
+    "301": 1538,
+    "302": 13,
+    "303": 393,
+    "402": 2172,
+    "426": 180,
+    "428": 58,
+    "429": 54,
+    "430": 33,
+    "432": 58,
+    "439": 67,
+    "505": 429,
+    "618": 897,
+    "623": 368
+  },
+  "propsByKind": {
+    "tree": 8984,
+    "bus_stop": 429,
+    "lamp": 283,
+    "speed_bump": 126
+  },
+  "areasByKind": {
+    "grass": 587,
+    "parking_lot": 557,
+    "park": 549,
+    "sports": 402,
+    "plaza": 144,
+    "construction": 107,
+    "school": 93,
+    "forest": 78,
+    "water": 75,
+    "sand": 15,
+    "cemetery": 9
+  },
+  "buildingsByKind": {
+    "residential": 13711,
+    "public": 592,
+    "education": 179,
+    "commercial": 164,
+    "other": 103,
+    "industrial": 58,
+    "religious": 30
+  },
+  "fileSize": {
+    "jsonBytes": 25807899,
+    "gzipBytes": 4435501,
+    "gzipMB": 4.44
+  },
+  "pipeline": {
+    "drivableWays": 4628,
+    "waysOutsideArea": 0,
+    "waysRemovedByOverride": 0,
+    "segmentsAfterSplit": 8009,
+    "nodesSnapped": 8,
+    "fragmentsCollapsed": 8,
+    "segmentsMerged": 277,
+    "loopsSplit": 14,
+    "roadsDropped": 0,
+    "roadsOutsideArea": 12,
+    "roadsOutsideClip": 1546,
+    "roadsInIslandsDropped": 144,
+    "roadComponentsKept": 2,
+    "onewaySinksDropped": 4,
+    "roads": 6032,
+    "nodes": 4569,
+    "riverPoints": 680,
+    "roadsNamedFromTlvAxes": 136,
+    "roadsUnnamed": 2005,
+    "busLanesFromTlv": 80,
+    "signalsFromJunctionNodes": 294,
+    "signalsFromApproachNodes": 13,
+    "signalNodesUnplaced": 24,
+    "tlvSignalisedMatched": 86,
+    "tlvSignalisedUnmatched": 9,
+    "signalsAddedFromTlv": 62,
+    "stopGiveWayApplied": 42,
+    "stopGiveWaySkipped": 2,
+    "priorityRoadsByClass": 1959,
+    "priorityRoadsByTlvAxis": 16,
+    "turnRestrictionsApplied": 204,
+    "turnRestrictionsSkipped": 155,
+    "crossings": 866,
+    "crossingsMidBlock": 341,
+    "crossingNodesSkippedByKind": 6,
+    "crossingNodesOnJunctionNode": 8,
+    "turnLanesPropagated": 2,
+    "turnLanesDropped": 17,
+    "turnLanesRelaxed": 65,
+    "turnLanesAssigned": 12,
+    "buildingsFromOsm": 13133,
+    "buildingsFromOsmRelations": 31,
+    "buildingsHeightFromTlv": 5933,
+    "buildingsHeightFromLevels": 662,
+    "buildingsHeightFromTag": 3,
+    "buildingsHeightDefault": 6535,
+    "buildingsTooSmall": 48,
+    "buildingsFromTlvOnly": 1704,
+    "buildings": 14837,
+    "seaPolygon": 1,
+    "areas_parking_lot": 557,
+    "areas_park": 549,
+    "areas_grass": 587,
+    "areas_plaza": 144,
+    "areas_sports": 402,
+    "areas_sand": 15,
+    "areas_water": 75,
+    "areas_school": 93,
+    "areas_forest": 78,
+    "areas_construction": 107,
+    "areas_cemetery": 9,
+    "areas": 2616,
+    "treesOsm": 718,
+    "treesTlv": 13115,
+    "treesDuplicate": 2499,
+    "treesNearCarriageway": 2042,
+    "trees": 8984,
+    "lamps": 283,
+    "busStops": 429,
+    "busStopsUnmatched": 173,
+    "speedBumps": 126,
+    "props": 9822,
+    "loadingZones": 67,
+    "signs_135": 191,
+    "signs_144": 131,
+    "signs_222": 198,
+    "signs_223": 111,
+    "signs_402": 2172,
+    "signs_426": 180,
+    "signs_432": 58,
+    "signs_439": 67,
+    "signs_505": 429,
+    "signs_618": 897,
+    "signs_623": 368,
+    "signsGenerated": 4947,
+    "parkingStrips": 2119,
+    "busOnlyRoads": 20,
+    "roadsWithSignalsControl": 370
+  },
+  "unknownTags": {
+    "excluded_highway": {
+      "footway": 3593,
+      "path": 974,
+      "track": 522,
+      "steps": 479,
+      "cycleway": 210,
+      "pedestrian": 165,
+      "construction": 113,
+      "proposed": 85,
+      "corridor": 18,
+      "platform": 8,
+      "raceway": 4
+    },
+    "excluded_service": {
+      "parking_aisle": 1053,
+      "driveway": 21,
+      "emergency_access": 3
+    },
+    "excluded_access": {
+      "no/": 94,
+      "private/": 86,
+      "/private": 16,
+      "/no": 5,
+      "customers/no": 1
+    }
+  },
+  "overrides": {
+    "applied": 0,
+    "failed": []
+  },
+  "routes": {
+    "test_a": {
+      "name": "מסלול טסט א׳ — נווה אביבים, נמיר, רוקח וחיים לבנון",
+      "kind": "test",
+      "waypoints": 9,
+      "lengthM": 8243
+    },
+    "test_b": {
+      "name": "מסלול טסט ב׳ — חיים לבנון, רמת אביב ג׳ ושדרות לוי אשכול",
+      "kind": "test",
+      "waypoints": 10,
+      "lengthM": 6894
+    },
+    "test_c": {
+      "name": "מסלול טסט ג׳ — אפקה, מבצע קדש ופנחס רוזן",
+      "kind": "test",
+      "waypoints": 6,
+      "lengthM": 7485
+    },
+    "test_d": {
+      "name": "מסלול טסט ד׳ — שיכון למ״ד, רוקח ורדינג",
+      "kind": "test",
+      "waypoints": 9,
+      "lengthM": 8496
+    },
+    "tour_north": {
+      "name": "סיור צפוני — אפקה, צהלה ורמת החייל",
+      "kind": "tour",
+      "waypoints": 5,
+      "lengthM": 7622
+    },
+    "tour_coast": {
+      "name": "סיור חוף — כוכב הצפון, קדושי השואה ונמיר",
+      "kind": "tour",
+      "waypoints": 4,
+      "lengthM": 6845
+    }
+  },
+  "spawnPoints": [
+    {
+      "id": "tlv_test_start",
+      "laneId": "w35417361_1:f0",
+      "street": "רב אשי",
+      "tags": [
+        "start",
+        "test",
+        "lesson",
+        "quiet"
+      ]
+    },
+    {
+      "id": "tlv_university",
+      "laneId": "w1493470021_0:f1",
+      "street": "חיים לבנון",
+      "tags": [
+        "main_road",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_einstein",
+      "laneId": "w499685114_0:f2",
+      "street": "אינשטיין",
+      "tags": [
+        "main_road",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_namir_rokach",
+      "laneId": "w37126023_1:f0",
+      "street": "דרך נמיר",
+      "tags": [
+        "main_road",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_kochav",
+      "laneId": "w34905943_0:f0",
+      "street": "הרצל רוזנבלום",
+      "tags": [
+        "quiet",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_afeka",
+      "laneId": "w35417864_0:f0",
+      "street": "דב גרונר",
+      "tags": [
+        "quiet",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_telbaruch",
+      "laneId": "w35441156_1:f0",
+      "street": "יגאל מוסינזון",
+      "tags": [
+        "quiet",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_hadaryosef",
+      "laneId": "w36371364_3:f0",
+      "street": "קהילת לבוב",
+      "tags": [
+        "quiet",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_tzahala",
+      "laneId": "w35667438_0:f0",
+      "street": "בת חן",
+      "tags": [
+        "quiet",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_ramathahayal",
+      "laneId": "w912644180_1:f0",
+      "street": "ראול ולנברג",
+      "tags": [
+        "main_road",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_lamed",
+      "laneId": "w31651158_0:f0",
+      "street": "יהודה בורלא",
+      "tags": [
+        "quiet",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_neveavivim",
+      "laneId": "w30803826_1:f0",
+      "street": "טאגור",
+      "tags": [
+        "quiet",
+        "lesson",
+        "free"
+      ]
+    },
+    {
+      "id": "tlv_glilot",
+      "laneId": "w344474132_0:f0",
+      "street": "דרך נמיר",
+      "tags": [
+        "main_road",
+        "free"
+      ]
+    }
+  ],
+  "validation": {
+    "problems": [
+      "654 drive lanes are outside the largest strongly-connected component (9373 lanes): 380 cut by the data extent, 237 one-way sources/sinks, 37 interior"
+    ],
+    "danglingLanes": 0,
+    "danglingLaneIds": [],
+    "unreachableLanes": 654,
+    "unreachableByCategory": {
+      "edge": 380,
+      "onewaySourceOrSink": 237,
+      "interior": 37
+    },
+    "interiorUnreachableLaneIds": [
+      "w1007466871_0:f0",
+      "w1007466872_0:f0",
+      "w1007466872_0:b0",
+      "w1109932692_0:f0",
+      "w1109932692_0:b0",
+      "w1182720054_0:f0",
+      "w1182720054_0:b0",
+      "w1182720054_1:f0",
+      "w1182720054_1:b0",
+      "w1237411529_0:f0",
+      "w1237411530_0:f0",
+      "w1237411574_0:f0",
+      "w1237411576_0:f0",
+      "w1275972339_0:b0",
+      "w26386746_0:f0",
+      "w26386746_0:b0",
+      "w33826310_0:b0",
+      "w42029648_1:b0",
+      "w44070730_1:b0",
+      "w44332386_2:b0",
+      "w461412523_1:b0",
+      "w48070019_0:f0",
+      "w48070019_0:b0",
+      "w48070019_1:f0",
+      "w48070019_1:b0",
+      "w48070023_0:f0",
+      "w48070048_0:f0",
+      "w48070048_0:b0",
+      "w58368178_3:b0",
+      "w65354415_0:f0",
+      "w65354415_1:f0",
+      "w65354415_2:f0",
+      "w65354415_3:f0",
+      "w710261370_0:f0",
+      "w82266974_0:b0",
+      "w85140899_0:b0",
+      "w98602596_0:f0"
+    ],
+    "largestSccLanes": 9373,
+    "bigJunctions": [],
+    "zeroLengthRoads": 0,
+    "duplicateIds": [],
+    "invalidRoutes": []
+  },
+  "todos": [
+    "9 municipal signalised junctions had no OSM junction within 25 m (outside the drivable network, south of the river, or mid-block pedestrian signals): דיזנגוף-התערוכה (הירקון) @ 34.77587,32.09726; בן יהודה-דיזנגוף @ 34.77605,32.09602; דיזנגוף-ירמיהו @ 34.77644,32.09481; מסוף האוניברסיטה @ 34.80347,32.10418; איילון צפון-כביש 5 @ 34.81160,32.13903; קרן קיימת לישראל 70 - קרן קיימת לישראל @ 34.80786,32.11994; אבן גבירול - מעבר חציה 5 @ 34.79326,32.13447; אבן גבירול מעבר חציה 6 @ 34.79504,32.13748; ולנברג ראול - חניון מזרחי @ 34.84416,32.11714",
+    "2 stop/give-way nodes could not be attached to an approach (on the junction node itself, or > 40 m from a junction).",
+    "155 turn restrictions skipped (via way, members outside the network, or ambiguous from-way).",
+    "8 crossing nodes sit exactly on a junction node and were dropped (the builder cannot attach a crossing to a node).",
+    "20 roads are bus-only in OSM (access=no + psv=yes) but are drivable in the world file: the runtime has no bus-only road kind yet.",
+    "654 drive lanes outside the main component — usually roads cut by the data extent or one-way fragments; harmless for the player but unreachable for routing",
+    "Sign positions along a road (426/618/402/222/223/432/433/144/135/505/623) are derived from the network, not surveyed — real posts may differ by tens of metres.",
+    "Mid-block signalised pedestrian crossings (crossing=traffic_signals away from junctions) are kept as crossings of kind \"signals\" without a signal controller.",
+    "Each OSM node of a dual-carriageway junction gets its own signal controller; phases are not coordinated between the two carriageways.",
+    "mini_roundabout nodes (1) and contraflow bus lanes (psv=opposite_lane, 2) are not modelled.",
+    "Municipal one-way arrows (636) and parking-zone polygons (544) were not used (angle semantics / street-level OSM tags are more precise)."
+  ],
+  "timingsMs": {
+    "parseOsm": 6834,
+    "loadTlv": 355,
+    "semantics": {
+      "network": 421,
+      "names": 31,
+      "busLanes": 57,
+      "signals": 32,
+      "stopGiveWay": 27,
+      "priority": 11,
+      "restrictions": 6,
+      "crossings": 31,
+      "overrides": 45,
+      "turnLanes": 69,
+      "junctionNames": 12,
+      "buildings": 433,
+      "areas": 130,
+      "props": 267,
+      "signs": 79
+    },
+    "buildPass1": 3204,
+    "places": 6020,
+    "buildPass2": 3886,
+    "validate": 1489,
+    "serialise": 662,
+    "verifyRoundTrip": 1813,
+    "gzip": 1270,
+    "total": 27256
+  }
+}
