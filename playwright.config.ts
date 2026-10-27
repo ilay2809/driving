@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { createHash } from 'node:crypto';
 
 // Headless Chromium needs software GL for WebGL2 in CI/cloud containers.
 const gpuArgs = [
@@ -10,6 +11,13 @@ const gpuArgs = [
   '--disable-dev-shm-usage',
 ];
 
+// Each checkout (main tree, agent worktrees, CI) gets its own preview port so that
+// parallel e2e runs never reuse another checkout's preview server by accident.
+// Override with PW_PORT when needed.
+const hashedPort = 4300 + (parseInt(createHash('sha1').update(process.cwd()).digest('hex').slice(0, 6), 16) % 400);
+export const PREVIEW_PORT = Number(process.env.PW_PORT ?? hashedPort);
+const baseURL = `http://127.0.0.1:${PREVIEW_PORT}`;
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 120_000,
@@ -18,16 +26,16 @@ export default defineConfig({
   reporter: [['list']],
   outputDir: 'test-results',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL,
     headless: true,
     viewport: { width: 1280, height: 720 },
     launchOptions: { args: gpuArgs },
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'pnpm preview',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
+    command: `pnpm exec vite preview --port ${PREVIEW_PORT} --strictPort`,
+    url: baseURL,
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });
