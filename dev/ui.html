@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>UI harness — סימולטור נהיגה</title>
+    <style>
+      #harness-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 8px; background: rgba(0, 0, 0, 0.82); font: 12px system-ui, sans-serif; direction: ltr; }
+      #harness-bar button { font: inherit; padding: 3px 8px; border-radius: 6px; border: 1px solid #555; background: #222; color: #eee; cursor: pointer; }
+      #harness-bar button:hover { background: #333; }
+      #harness-bar button.active { background: #2563eb; border-color: #2563eb; }
+      #harness-bar[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+      <div id="ui"></div>
+    </div>
+    <div id="harness-bar"></div>
+    <script type="module" src="/src/dev/ui.ts"></script>
+  </body>
+</html>
