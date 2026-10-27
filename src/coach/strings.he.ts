@@ -182,6 +182,8 @@ export const STRINGS_HE: Record<string, LineDef> = {
   'explain.nothing': I('אין משהו מיוחד כרגע. המשך בנסיעה רגילה.'),
 
   // ---- examiner ---------------------------------------------------------------------
+  'place.junction': E('בצומת {names}'),
+  'place.street': E('ברחוב {street}'),
   'examiner.greeting': E('שלום, אני הבוחן. ניסע לפי ההוראות שלי. כשתהיה מוכן, צא לדרך.'),
   'examiner.speeding': E('שים לב למהירות.'),
   'examiner.maneuver.pull_over': E('עצור בצד ליד המדרכה, במקום המותר.'),

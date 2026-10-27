@@ -7,14 +7,14 @@
  * ≤ `pedestrians·40` pedestrians within 250 m. When the player is nowhere near the road
  * network (e.g. tests with a far-away parked player) the whole world is populated instead.
  */
-import { angleDiff, dist2, forwardOf, rightOf, type Vec2 } from '@/world/geo';
+import { angleDiff, dist2, forwardOf, projectOntoPolyline, rightOf, type Vec2 } from '@/world/geo';
 import type { Crossing, Lane } from '@/world/schema';
 import type { Frame } from './agents';
 import { PED, SPAWN, VEHICLE_DIMS, VEHICLE_MIX, type VehicleKind } from './constants';
 import type { Seg } from './network';
 import { createPedestrianAgent, PedestrianAgent, placePedestrian } from './pedestrians';
 import { obbGap } from './util';
-import { createVehicleAgent, placeOnSegment, VehicleAgent } from './vehicles';
+import { createVehicleAgent, parkOnSegment, placeOnSegment, VehicleAgent } from './vehicles';
 
 export interface Interest {
   centre: Vec2;
@@ -41,6 +41,12 @@ export interface SpawnVehicleOptions {
   distance?: number;
   speedKmh?: number;
   vehicle?: VehicleKind;
+  /** Stationary car at the kerb (the examiner's parallel-parking gap); never drives. */
+  parked?: boolean;
+  /** Kerb side for a parked car (default 'right' = the driver's near kerb). */
+  side?: 'right' | 'left';
+  /** Lane the distance refers to (defaults to the player's lane). */
+  laneId?: string;
 }
 
 function inViewCone(frame: Frame, p: Vec2, maxDist: number): boolean {
@@ -53,9 +59,10 @@ function inViewCone(frame: Frame, p: Vec2, maxDist: number): boolean {
 }
 
 /** No vehicle (or the player) too close to a candidate spawn slot. */
-export function spawnSlotClear(host: SpawnHost, seg: Seg, s: number, length: number): boolean {
+export function spawnSlotClear(host: SpawnHost, seg: Seg, s: number, length: number, opts: { playerGap?: number } = {}): boolean {
   const frame = host.frame;
   for (const e of frame.occ.get(seg.id)) {
+    if (e.player && opts.playerGap !== undefined) continue; // the player's clearance is the explicit gap below
     if (Math.abs(e.s - s) < (e.length + length) / 2 + SPAWN.clearance) return false;
   }
   if (seg.kind === 'lane') {
@@ -72,7 +79,7 @@ export function spawnSlotClear(host: SpawnHost, seg: Seg, s: number, length: num
   const at = frame.net.at(seg, s);
   const obb = { pos: at.p, heading: at.h, length, width: 2.5 };
   for (const v of frame.vehiclesNear(at.p, 20)) if (obbGap(obb, v.obb) < 4) return false;
-  if (frame.player && obbGap(obb, frame.player.obb) < 12) return false;
+  if (frame.player && obbGap(obb, frame.player.obb) < (opts.playerGap ?? 12)) return false;
   return true;
 }
 
@@ -189,7 +196,13 @@ function walkBackward(frame: Frame, lane: Lane, s: number, distance: number): { 
 /** Spawn a vehicle relative to the player's lane / next junction (lesson requests). */
 export function spawnVehicleRelative(host: SpawnHost, opts: SpawnVehicleOptions): VehicleAgent | undefined {
   const frame = host.frame;
-  const ref = playerLaneRef(frame);
+  let ref = playerLaneRef(frame);
+  if (opts.laneId && frame.graph.lanes.has(opts.laneId) && ref?.lane.id !== opts.laneId && frame.player) {
+    // the request names a lane (e.g. the examiner's parking lane): measure from the player's projection onto it
+    const lane = frame.graph.lane(opts.laneId);
+    const pr = projectOntoPolyline(lane.centre, frame.player.state.pos);
+    if (pr.distance <= 12) ref = { lane, s: pr.s };
+  }
   if (!ref) return undefined;
   const kind: VehicleKind = opts.vehicle ?? 'car';
   const distance = opts.distance ?? 60;
@@ -251,12 +264,14 @@ export function spawnVehicleRelative(host: SpawnHost, opts: SpawnVehicleOptions)
   if (!target) return undefined;
   const dims = VEHICLE_DIMS[kind];
   const slot: { seg: Seg; s: number } = target;
-  if (!spawnSlotClear(host, slot.seg, slot.s, dims.length)) {
+  // a parked car is placed deliberately close ahead of the player (the examiner's parking gap)
+  const clear = { playerGap: opts.parked ? 3 : undefined };
+  if (!spawnSlotClear(host, slot.seg, slot.s, dims.length, clear)) {
     // nudge backwards a little to find a free slot
     let found = false;
     for (let k = 1; k <= 4 && !found; k++) {
       const s2: number = slot.s - k * (dims.length + 4);
-      if (s2 >= 0 && spawnSlotClear(host, slot.seg, s2, dims.length)) {
+      if (s2 >= 0 && spawnSlotClear(host, slot.seg, s2, dims.length, clear)) {
         slot.s = s2;
         found = true;
       }
@@ -264,7 +279,8 @@ export function spawnVehicleRelative(host: SpawnHost, opts: SpawnVehicleOptions)
     if (!found) return undefined;
   }
   const agent = createVehicleAgent(host.nextVehicleId(), kind, frame.rng, frame.time, { bad: false, siren: kind === 'emergency' });
-  placeOnSegment(agent, slot.seg, slot.s, speed ?? slot.seg.vmax * 0.9, frame);
+  if (opts.parked) parkOnSegment(agent, slot.seg, slot.s, opts.side ?? 'right', frame);
+  else placeOnSegment(agent, slot.seg, slot.s, speed ?? slot.seg.vmax * 0.9, frame);
   host.addVehicle(agent);
   return agent;
 }

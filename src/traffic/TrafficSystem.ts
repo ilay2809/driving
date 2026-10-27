@@ -124,7 +124,7 @@ export class TrafficSystem implements System, SpawnHost {
   }
   addVehicle(agent: VehicleAgent): void {
     this.vehicleList.push(agent);
-    this.occ.add(agent.seg.id, agent.occEntry());
+    if (!agent.parked) this.occ.add(agent.seg.id, agent.occEntry());
     this.vehHash.insert(agent);
     this.statsState.spawned++;
   }
@@ -292,9 +292,10 @@ export class TrafficSystem implements System, SpawnHost {
     this.vehHash.clear();
     this.pedHash.clear();
     for (const v of this.vehicleList) {
+      this.vehHash.insert(v);
+      if (v.parked) continue; // at the kerb: not a leader for the lane's traffic
       this.occ.add(v.seg.id, v.occEntry());
       if (v.laneChange && f.time - v.laneChange.t0 < 1.8) this.occ.add(v.laneChange.from, v.occEntry());
-      this.vehHash.insert(v);
     }
     const pl = f.player;
     if (pl?.slot) {
@@ -340,6 +341,9 @@ export class TrafficSystem implements System, SpawnHost {
           distance: typeof payload['distance'] === 'number' ? (payload['distance'] as number) : undefined,
           speedKmh: typeof payload['speedKmh'] === 'number' ? (payload['speedKmh'] as number) : undefined,
           vehicle: typeof payload['vehicle'] === 'string' ? (payload['vehicle'] as VehicleKind) : undefined,
+          parked: payload['parked'] === true,
+          side: payload['side'] === 'left' ? 'left' : payload['side'] === 'right' ? 'right' : undefined,
+          laneId: typeof payload['laneId'] === 'string' ? (payload['laneId'] as string) : undefined,
         });
       }
     }

@@ -51,9 +51,12 @@ then `mirrors.render()` and the main render (`WorldRenderer.update(cameraPos)` f
   UI clears the previous step's hints on it.
 - **free**: spawn chosen in the setup screen; coachPresent toggles the Instructor; "law monitor"
   shows violations even without the instructor; optional "police" (future).
-- **test**: route = one of the world's `routes` of kind 'test' (random unless chosen); Examiner with
-  the route path (`graph.routeViaJunctions(startLane, waypoints)`), coachPresent = true, instructor
-  absent; `test:finished` → Profile.recordTest + result sheet.
+- **test**: route = one of the world's `routes` of kind 'test' chosen in the intro, or ("מסלול אקראי")
+  a 6–8 km route generated on the real network (`src/modes/routeGen.ts`, seeded); when a hand-made
+  route leaves the other way the car is started on the opposite lane instead of opening with a
+  U-turn; Examiner with the route path (`graph.routeViaJunctions(startLane, waypoints)`),
+  coachPresent = true, instructor absent; `test:finished` → Profile.recordTest + result sheet.
+  "מבחן חדש" / restart re-run `TestMode.start`, which drops the previous test's bus subscriptions.
 - **theory**: no 3D; TheoryEngine + quiz screens; sign library; rule book.
 - **training_ground**: free drive on the synthetic town with the instructor.
 

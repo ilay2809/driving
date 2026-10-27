@@ -34,6 +34,8 @@ export interface TrafficAgentView extends TrafficAgentState {
   badDriver?: boolean;
   /** Vehicles: the lane it is moving into while a lane change is in progress. */
   laneChangeTo?: string;
+  /** Vehicles: a scripted parked car at the kerb (never moves). */
+  parked?: boolean;
   /** Pedestrians: 0..1 progress along the crossing while `pedState === 'crossing'`. */
   crossingProgress?: number;
   /** Pedestrians: crossing outside a marked crossing (jaywalking). */
