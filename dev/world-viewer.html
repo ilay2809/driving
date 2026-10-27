@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>World viewer — מציג העולם</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0f14; color: #f2f5f8; font-family: 'Rubik', 'Heebo', system-ui, sans-serif; overflow: hidden; }
+      #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+      #overlay { position: fixed; top: 8px; left: 8px; direction: ltr; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(8, 12, 18, 0.72); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; white-space: pre; pointer-events: none; }
+      #message { position: fixed; inset: 0; display: none; place-content: center; text-align: center; font-size: 18px; padding: 24px; }
+      #message.show { display: grid; }
+      #help { position: fixed; bottom: 8px; left: 8px; direction: ltr; font: 11px/1.4 ui-monospace, monospace; color: #9aa7b4; background: rgba(8,12,18,0.6); border-radius: 8px; padding: 4px 8px; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div id="overlay">…</div>
+    <div id="message"></div>
+    <div id="help">?world=training-ground|north-tlv|stress  ?view=orbit|driver&x=&z=&h=  ?hour=0..24  ?weather=clear|rain|fog  ?quality=low|medium|high  ?signals=cycle|off  ?preload=0</div>
+    <script type="module" src="/src/dev/worldViewer.ts"></script>
+  </body>
+</html>
