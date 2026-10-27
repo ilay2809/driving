@@ -1,0 +1,28 @@
+@import '@fontsource/rubik/400.css';
+@import '@fontsource/rubik/500.css';
+@import '@fontsource/rubik/700.css';
+@import '@fontsource/heebo/400.css';
+@import '@fontsource/heebo/700.css';
+
+:root {
+  --font-ui: 'Rubik', 'Heebo', system-ui, sans-serif;
+  --bg: #0b0f14;
+  --panel: rgba(12, 18, 26, 0.86);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #f2f5f8;
+  --muted: #9aa7b4;
+  --accent: #3b82f6;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); overflow: hidden; }
+#app { position: fixed; inset: 0; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#ui { position: absolute; inset: 0; pointer-events: none; }
+#ui > * { pointer-events: auto; }
+.boot, .fatal { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.fatal pre { text-align: left; direction: ltr; color: var(--danger); max-width: 80vw; white-space: pre-wrap; }
