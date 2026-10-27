@@ -12,6 +12,11 @@ describe('renderMarkdown', () => {
     expect(div.querySelectorAll('ul li')).toHaveLength(2);
   });
 
+  it('renders numbered lists, also after a lead-in line in the same block', () => {
+    expect(markdownHtml('1. ראשון\n2. שני\n3) שלישי')).toBe('<ol><li>ראשון</li><li>שני</li><li>שלישי</li></ol>');
+    expect(markdownHtml('סדר הפעולות:\n1. מראה\n2. איתות\n- הערה')).toBe('<p>סדר הפעולות:</p><ol><li>מראה</li><li>איתות</li></ol><ul><li>הערה</li></ul>');
+  });
+
   it('escapes HTML', () => {
     expect(markdownHtml('<script>x</script> **b**')).toBe('<p>&lt;script&gt;x&lt;/script&gt; <strong>b</strong></p>');
   });

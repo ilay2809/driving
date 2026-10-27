@@ -3,11 +3,21 @@
  * the sign library and the rule book. No 3D world is loaded.
  */
 import type { AppShell } from '@/app/AppShell';
-import { TheoryEngine, EXAM_DEFAULTS, type ExamState } from '@/coach';
+import { TheoryEngine, EXAM_DEFAULTS, type ExamState, type TheoryStats } from '@/coach';
 import type { RuleArticle } from '@/content/schema';
+import { esc } from '@/ui/dom';
 import { renderMarkdown } from '@/ui/markdown';
 
-type HubItem = { id: string; title: string; text: string; onPick: () => void };
+type HubItem = { id: 'practice' | 'exam' | 'signs' | 'rules'; title: string; text: string; onPick: () => void };
+
+/** One-line progress summary for the hub ("" when nothing was answered yet). */
+export function theoryStatsLine(s: Pick<TheoryStats, 'attempts' | 'correct' | 'exams'>): string {
+  if (s.attempts === 0 && s.exams.taken === 0) return '';
+  const parts: string[] = [];
+  if (s.attempts > 0) parts.push(`ענית על ${s.attempts} שאלות, ${s.correct} נכונות`);
+  if (s.exams.taken > 0) parts.push(`${s.exams.taken} מבחנים מדומים, ${s.exams.passed} עברת`);
+  return parts.join(' · ');
+}
 
 export class TheoryMode {
   private panel?: HTMLElement;
@@ -30,14 +40,13 @@ export class TheoryMode {
     let stats = '';
     try {
       const engine = await this.ensureEngine();
-      const s = engine.stats() as { answered?: number; correct?: number; total?: number };
-      if (s.answered) stats = `ענית על ${s.answered} שאלות, ${s.correct ?? 0} נכונות`;
+      stats = theoryStatsLine(engine.stats());
     } catch (err) {
       ui.toast(`מאגר השאלות לא נטען: ${String(err)}`, 'danger', 8);
     }
     this.renderHub([
-      { id: 'practice', title: 'תרגול (20 שאלות)', text: 'שאלות מהמאגר הרשמי לרישיון B, עם משוב מיידי. שאלות שטעית בהן יחזרו.', onPick: () => void this.practice() },
-      { id: 'exam', title: 'מבחן תיאוריה מדומה', text: '30 שאלות, 40 דקות, עד 4 טעויות — כמו במבחן האמיתי.', onPick: () => void this.exam() },
+      { id: 'practice', title: 'תרגול (20 שאלות)', text: 'שאלות מהמאגר הרשמי לרישיון B, עם משוב מיידי. שאלות שטעית בהן יחזרו שוב.', onPick: () => void this.practice() },
+      { id: 'exam', title: 'מבחן תיאוריה מדומה', text: '30 שאלות, 40 דקות, עד 4 טעויות — בדיוק כמו במבחן האמיתי.', onPick: () => void this.exam() },
       { id: 'signs', title: 'ספריית תמרורים', text: 'כל התמרורים הרלוונטיים לנהג חדש, לפי קטגוריות, עם משמעות והנחיה.', onPick: () => void this.signs() },
       { id: 'rules', title: 'ספר החוקים', text: 'הסברים קצרים בעברית על חוקי התנועה שנתרגל בכביש.', onPick: () => void this.rules() },
     ], stats);
@@ -50,7 +59,7 @@ export class TheoryMode {
     el.setAttribute('dir', 'rtl');
     el.innerHTML = `
       <div class="mode-panel__card">
-        <header class="mode-panel__header"><h1>תיאוריה</h1><p class="mode-panel__sub">${stats || 'מאגר השאלות הרשמי של משרד התחבורה'}</p></header>
+        <header class="mode-panel__header"><h1>תיאוריה</h1><p class="mode-panel__sub" data-role="stats">${esc(stats || 'מאגר השאלות הרשמי של משרד התחבורה')}</p></header>
         <div class="mode-panel__grid"></div>
         <footer class="mode-panel__footer"><button class="mode-btn mode-btn--ghost" data-act="back">חזרה לתפריט</button></footer>
       </div>`;
@@ -58,7 +67,8 @@ export class TheoryMode {
     for (const item of items) {
       const b = document.createElement('button');
       b.className = 'mode-card';
-      b.innerHTML = `<strong>${item.title}</strong><span>${item.text}</span>`;
+      b.dataset.hub = item.id;
+      b.innerHTML = `<strong>${esc(item.title)}</strong><span>${esc(item.text)}</span>`;
       b.addEventListener('click', item.onPick);
       grid.appendChild(b);
     }
@@ -87,13 +97,15 @@ export class TheoryMode {
     const engine = await this.ensureEngine();
     const questions = engine.pick({ count: 20, classB: true, weakFirst: true });
     this.closePanel();
+    // Every answer is recorded by the engine as it is given; the quiz screen shows its own
+    // results page when finished and only returns to the hub when the player closes it.
     this.app.ui.showScreen('theoryQuiz', {
       questions,
       mode: 'practice',
       onAnswer: (id, index) => {
         engine.answer(id, index);
       },
-      onFinish: () => void this.hub(),
+      onFinish: () => {},
       onClose: () => void this.hub(),
     });
   }
@@ -109,14 +121,15 @@ export class TheoryMode {
       timeLimitSec: EXAM_DEFAULTS.minutes * 60,
       passMark: EXAM_DEFAULTS.passMark,
       onAnswer: (id, index) => {
-        engine.answerExam(id, index);
+        if (engine.exam) engine.answerExam(id, index);
       },
+      // Finished (last answer or time up): record the exam; the results page stays on screen.
       onFinish: () => {
         if (engine.exam) engine.finishExam();
-        void this.hub();
       },
+      // Closed before finishing: the exam is abandoned and not recorded.
       onClose: () => {
-        engine.abortExam();
+        if (engine.exam) engine.abortExam();
         void this.hub();
       },
     });
@@ -136,36 +149,35 @@ export class TheoryMode {
 
   private renderRules(articles: RuleArticle[], selected?: RuleArticle): void {
     this.closePanel();
+    const show = selected ?? articles[0];
     const el = document.createElement('div');
     el.className = 'mode-panel';
     el.setAttribute('dir', 'rtl');
     el.innerHTML = `
       <div class="mode-panel__card mode-panel__card--wide">
-        <header class="mode-panel__header"><h1>ספר החוקים</h1><p class="mode-panel__sub">${selected ? selected.title : `${articles.length} נושאים`}</p></header>
+        <header class="mode-panel__header"><h1>ספר החוקים</h1><p class="mode-panel__sub">${esc(show ? show.title : `${articles.length} נושאים`)}</p></header>
         <div class="mode-rules">
-          <nav class="mode-rules__nav"></nav>
+          <nav class="mode-rules__nav" aria-label="נושאים"></nav>
           <article class="mode-rules__body"></article>
         </div>
         <footer class="mode-panel__footer"><button class="mode-btn mode-btn--ghost" data-act="back">חזרה</button></footer>
       </div>`;
     const nav = el.querySelector('.mode-rules__nav')!;
     const body = el.querySelector('.mode-rules__body')!;
+    let activeBtn: HTMLButtonElement | undefined;
     for (const a of articles) {
       const b = document.createElement('button');
-      b.className = 'mode-rules__item' + (selected?.id === a.id ? ' is-active' : '');
+      const active = show?.id === a.id;
+      b.className = 'mode-rules__item' + (active ? ' is-active' : '');
+      b.dataset.rule = a.id;
+      b.setAttribute('aria-current', active ? 'true' : 'false');
       b.textContent = a.title;
       b.addEventListener('click', () => this.renderRules(articles, a));
       nav.appendChild(b);
+      if (active) activeBtn = b;
     }
-    const show = selected ?? articles[0];
     if (show) {
       body.appendChild(renderMarkdown(show.body));
-      if (show.source) {
-        const src = document.createElement('p');
-        src.className = 'mode-rules__source';
-        src.textContent = `מקור: ${show.source}`;
-        body.appendChild(src);
-      }
       if (show.signs.length) {
         const row = document.createElement('div');
         row.className = 'mode-rules__signs';
@@ -179,6 +191,12 @@ export class TheoryMode {
         }
         body.appendChild(row);
       }
+      if (show.source) {
+        const src = document.createElement('p');
+        src.className = 'mode-rules__source';
+        src.textContent = `מקור: ${show.source}`;
+        body.appendChild(src);
+      }
     }
     el.querySelector('[data-act="back"]')!.addEventListener('click', () => void this.hub());
     el.addEventListener('keydown', (e) => {
@@ -186,6 +204,9 @@ export class TheoryMode {
     });
     this.app.uiRoot.appendChild(el);
     this.panel = el;
+    const focusTarget = activeBtn ?? (nav.querySelector('button') as HTMLButtonElement | null);
+    focusTarget?.focus({ preventScroll: !selected });
+    if (selected && activeBtn) activeBtn.scrollIntoView({ block: 'nearest' });
   }
 
   dispose(): void {

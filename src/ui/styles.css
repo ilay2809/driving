@@ -361,7 +361,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .screen.screen-md { width: min(720px, 100%); }
 .screen.screen-lg { width: min(1180px, 100%); }
 .screen.screen-xl { width: min(1240px, 100%); max-height: calc(100vh - 24px); }
-@keyframes screen-in { from { opacity: 0; transform: translateY(10px) scale(0.985); } to { opacity: 1; transform: none; } }
+/* Transform only: a dialog must be readable from its first frame even when the compositor is
+   slow to advance animations (software GL, busy main thread), so no fade from opacity 0. */
+@keyframes screen-in { from { transform: translateY(10px) scale(0.985); } to { transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .screen-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .screen-head h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
@@ -569,7 +571,9 @@ input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: var(--focu
 .quiz-progress { display: flex; align-items: center; gap: 12px; font-weight: 500; }
 .progress-bar { width: 180px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 .progress-bar i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
-.quiz-timer { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.quiz-timer-wrap { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 15px; }
+.quiz-timer-wrap .icon { color: var(--muted); }
+.quiz-timer { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
 .quiz-timer.low { color: var(--danger); font-weight: 700; }
 .quiz-body { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .quiz-body.has-image { grid-template-columns: 1fr 280px; }

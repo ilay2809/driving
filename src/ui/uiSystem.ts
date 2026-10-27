@@ -95,6 +95,7 @@ export class UISystem implements System {
   private helpProps: HelpProps = {};
   private acc = 0;
   private hudEverUpdated = false;
+  private paused = false;
   private lastCtx?: SimContext;
   private readonly prefsKey: string | null;
   private readonly keyHandler = (e: KeyboardEvent) => this.onKey(e);
@@ -159,7 +160,10 @@ export class UISystem implements System {
       on('theory:question', (q) => this.pushTheoryQuestion(q)),
       on('examiner:maneuver', ({ kind, text, status }) => this.hud.setManeuver(kind, text, status)),
       on('mode:changed', ({ mode }) => this.setMode(mode)),
-      on('sim:paused', ({ paused }) => this.root.classList.toggle('paused', paused)),
+      on('sim:paused', ({ paused }) => {
+        this.paused = paused;
+        this.root.classList.toggle('paused', paused);
+      }),
       on('sim:reset', () => this.resetTransient()),
       on('test:started', () => this.resetTransient()),
       on('test:finished', () => {
@@ -179,6 +183,14 @@ export class UISystem implements System {
     this.subtitles.clear();
     this.minimap.setNextJunction(undefined);
     this.hud.clearStep();
+  }
+
+  /** Forget everything that belonged to a session (law monitor, subtitles, nav banner, route). */
+  clearTransient(): void {
+    this.resetTransient();
+    this.minimap.setRoute(null);
+    this.paused = false;
+    this.root.classList.remove('paused');
   }
 
   // ---------------------------------------------------------- per frame
@@ -246,6 +258,12 @@ export class UISystem implements System {
   /** Data for the F1 help overlay (keymap, gamepad / wheel notes). */
   setHelp(props: HelpProps): void {
     this.helpProps = props;
+  }
+
+  /** Open the help overlay (with the data given to `setHelp`) on top of whatever is open; no-op if it is already open. */
+  showHelp(): void {
+    if (this.currentScreen === 'help' || this.loading.visible) return;
+    this.pushScreen('help', { ...this.helpProps, onClose: () => this.popScreen() });
   }
 
   setPrefs(patch: Partial<UiPrefs>): void {
@@ -341,7 +359,9 @@ export class UISystem implements System {
     if (!top) {
       if (e.key === 'F1' && !this.loading.visible) {
         e.preventDefault();
-        this.pushScreen('help', { ...this.helpProps, onClose: () => this.popScreen() });
+        // The input system (bubble phase on window) would otherwise open help a second time.
+        e.stopPropagation();
+        this.showHelp();
       }
       return;
     }
@@ -349,7 +369,7 @@ export class UISystem implements System {
     if (e.key === 'F1' && top.name !== 'help') {
       e.preventDefault();
       e.stopPropagation();
-      this.pushScreen('help', { ...this.helpProps, onClose: () => this.popScreen() });
+      this.showHelp();
       return;
     }
     if (h.onKey?.(e)) {
@@ -361,8 +381,9 @@ export class UISystem implements System {
       e.stopPropagation();
       return;
     }
-    // Keep driving keys from reaching the input system while a full screen is open.
-    if (h.kind === 'full' && !/^F\d+$/.test(e.key)) e.stopPropagation();
+    // Keep driving keys from reaching the input system while a full screen is open or the
+    // simulation is paused (pause menu and the screens stacked on it).
+    if ((h.kind === 'full' || this.paused) && !/^F\d+$/.test(e.key)) e.stopPropagation();
   }
 
   /** Last SimContext seen by update() (for screens that enrich data, e.g. place names). */
