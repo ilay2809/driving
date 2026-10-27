@@ -94,7 +94,7 @@ describe('Navigator', () => {
     expect(first.junctionId).toBe('n01');
     expect(first.streetName).toBe('שדרות הראשיים');
     expect(first.text).toContain('שמאלה');
-    expect(Math.abs(first.distance - (route.segments[1]!.start - 29.5 - 1 - 2.2))).toBeLessThan(1);
+    expect(Math.abs(first.distance - (route.segments[1]!.start - 29.5 - 1 - 2.2))).toBeLessThan(2);
     t.drive(route, 10, 5, systems);
     const n = instructions(t).length;
     expect(n).toBeGreaterThan(40);

@@ -15,7 +15,7 @@ export class FreeMode {
     this.worldName = worldName;
     const { ui } = this.app;
     ui.setLoading(0.2, 'טוען רשימת נקודות התחלה…');
-    let spawnPoints: { id: string; name: string }[] = [];
+    let spawnPoints: { id: string; name: string }[];
     try {
       const world = await getWorld(worldName);
       spawnPoints = world.spawnPoints.map((s) => ({ id: s.id, name: s.name }));

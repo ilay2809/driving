@@ -5,6 +5,7 @@ import type { Lesson } from '@/coach/lessonSchema';
 import type { SimEventMap } from '@/core/events';
 import { VIOLATIONS, type Severity, type Violation, type ViolationType } from '@/rules/violations';
 import type { DebriefError, LessonCardData } from '@/ui';
+import { parkingReporterFor } from '@/app/parking';
 
 export class LessonMode {
   private current?: Lesson;
@@ -85,7 +86,7 @@ export class LessonMode {
     this.runner = new LessonRunner(bus, session.dialogue, session.navigator, this.instructor, session.graph, {
       questionLookup: engine.lookup,
       onTimeScale: (factor, seconds) => session.loop.setTimeScale(factor, seconds),
-      parkingReporter: (ctx) => session.judge.parkingReport(ctx),
+      parkingReporter: parkingReporterFor(session.judge),
     });
     session.modeSystems.push(this.instructor, this.runner);
     session.onExplain = (ctx) => void this.instructor?.explainHere(ctx);

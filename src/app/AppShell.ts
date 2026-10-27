@@ -190,7 +190,7 @@ export class AppShell {
     const voices = typeof speechSynthesis !== 'undefined' ? speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('he')).map((v) => v.name) : [];
     let gamepadStatus = 'לא מחובר';
     try {
-      const pads = describeGamepads();
+      const pads = describeGamepads(typeof navigator !== 'undefined' && navigator.getGamepads ? Array.from(navigator.getGamepads()) : []);
       if (Array.isArray(pads) && pads.length > 0) gamepadStatus = pads.map((p: { id?: string; label?: string }) => p.label ?? p.id ?? '').join(', ');
     } catch {
       /* gamepad API unavailable */

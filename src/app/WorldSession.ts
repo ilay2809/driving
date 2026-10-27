@@ -255,7 +255,6 @@ export class WorldSession {
     this.loop.stop();
     for (const d of this.disposers) d();
     for (const s of [...this.modeSystems, ...this.systems]) s.dispose?.();
-    this.navigator.dispose?.();
     this.dialogue.dispose?.();
     this.judge.dispose?.();
     this.traffic.dispose();

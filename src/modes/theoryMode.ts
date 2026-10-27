@@ -3,7 +3,7 @@
  * the sign library and the rule book. No 3D world is loaded.
  */
 import type { AppShell } from '@/app/AppShell';
-import { TheoryEngine, EXAM_DEFAULTS } from '@/coach';
+import { TheoryEngine, EXAM_DEFAULTS, type ExamState } from '@/coach';
 import type { RuleArticle } from '@/content/schema';
 import { renderMarkdown } from '@/ui/markdown';
 
@@ -100,8 +100,8 @@ export class TheoryMode {
 
   async exam(): Promise<void> {
     const engine = await this.ensureEngine();
-    const state = engine.startExam({ count: EXAM_DEFAULTS.count, minutes: EXAM_DEFAULTS.minutes, passMark: EXAM_DEFAULTS.passMark });
-    const questions = (state as { questions: Parameters<typeof this.app.ui.showScreen<'theoryQuiz'>>[1]['questions'] }).questions;
+    const state: ExamState = engine.startExam({ count: EXAM_DEFAULTS.count, minutes: EXAM_DEFAULTS.minutes, passMark: EXAM_DEFAULTS.passMark });
+    const questions = state.questions;
     this.closePanel();
     this.app.ui.showScreen('theoryQuiz', {
       questions,

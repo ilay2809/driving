@@ -9,6 +9,7 @@ import type { ManeuverResult } from '@/ui';
 import type { PathResult } from '@/world/graph';
 import type { Route } from '@/world/schema';
 import { generateRoute } from './routeGen';
+import { parkingReporterFor } from '@/app/parking';
 
 const MANEUVER_LABELS: Record<string, string> = {
   parallel_park: 'חניה מקבילה',
@@ -29,7 +30,7 @@ export class TestMode {
   async intro(): Promise<void> {
     const { ui } = this.app;
     ui.setLoading(0.2, 'טוען מסלולי מבחן…');
-    let routes: { id: string; name: string }[] = [];
+    let routes: { id: string; name: string }[];
     try {
       const world = await getWorld('north-tlv');
       routes = world.routes.filter((r) => r.kind === 'test').map((r) => ({ id: r.id, name: r.name }));
@@ -84,7 +85,7 @@ export class TestMode {
     const startedAt = session.ctx.time;
 
     this.examiner = new Examiner(session.ctx.bus, session.dialogue, graph, session.navigator, { route: path, routeId: route?.id ?? `random-${seed}`, seed });
-    this.examiner.setParkingReporter((ctx) => session.judge.parkingReport(ctx));
+    this.examiner.setParkingReporter(parkingReporterFor(session.judge));
     session.modeSystems.push(this.examiner);
     session.onExplain = () => app.ui.toast('במבחן הבוחן לא מסביר — רק נותן הוראות.', 'info', 4);
     app.ui.setCoachPresence('examiner', 'הבוחן');

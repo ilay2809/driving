@@ -3,12 +3,17 @@ import type { TrafficAgentState } from '@/core/types';
 import { RoadGraph } from '@/world/graph';
 import { buildTrainingGround } from '@/world/testWorld';
 import { runScenario } from '../scripted';
+import { projectOntoPolyline } from '@/world/geo';
 
 const world = buildTrainingGround();
 const g = new RoadGraph(world);
 const CAR = 4.4;
-// eastbound on רחוב הברוש; the mid-block crossing c_mid is at x = -60 (lane s = 59.5, near edge at 58.0)
+// eastbound on רחוב הברוש; the mid-block crossing c_mid is at x = -60 — its lane arc-length depends on the
+// junction setbacks, so derive it from the graph instead of hard-coding it.
 const path = ['r00_10:f0'];
+const cMid = g.crossings.get('c_mid')!;
+const crossingS = projectOntoPolyline(g.lane('r00_10:f0').centre, [(cMid.line[0][0] + cMid.line[1][0]) / 2, (cMid.line[0][1] + cMid.line[1][1]) / 2]).s;
+const crossingNearEdgeS = crossingS - cMid.width / 2;
 const ped = (over: Partial<TrafficAgentState> = {}): TrafficAgentState => ({ id: 'ped1', kind: 'pedestrian', pos: [-60, -115.5], heading: -Math.PI / 2, speed: 0, length: 0.5, width: 0.5, crossingId: 'c_mid', pedState: 'waiting', ...over });
 
 describe('PedestriansDetector', () => {
@@ -22,7 +27,7 @@ describe('PedestriansDetector', () => {
   });
 
   it('stopping before the crossing, letting the pedestrian cross, then going → nothing', () => {
-    const stopS = 58 - 0.5 - CAR / 2 - 0.3;
+    const stopS = crossingNearEdgeS - 0.5 - CAR / 2 - 0.3;
     const r = runScenario(world, g, path, {
       startS: 5,
       endS: 100,
