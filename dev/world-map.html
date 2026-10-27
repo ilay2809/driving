@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>World map — debug viewer</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #1b1f27;
+        color: #e6e8ee;
+        font: 12px/1.4 system-ui, 'Segoe UI', Rubik, Arial, sans-serif;
+      }
+      #map {
+        position: absolute;
+        inset: 0;
+        display: block;
+        cursor: grab;
+      }
+      #map.dragging {
+        cursor: grabbing;
+      }
+      #status {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 4px 10px;
+        background: rgba(10, 12, 18, 0.85);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        direction: ltr;
+        pointer-events: none;
+      }
+      #tooltip {
+        position: absolute;
+        max-width: 420px;
+        padding: 6px 8px;
+        background: rgba(10, 12, 18, 0.92);
+        border: 1px solid #3a4150;
+        border-radius: 4px;
+        white-space: pre;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 11px;
+        pointer-events: none;
+        display: none;
+        direction: ltr;
+      }
+      #legend {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 6px 10px;
+        background: rgba(10, 12, 18, 0.85);
+        border-radius: 4px;
+        direction: rtl;
+        line-height: 1.5;
+      }
+      #legend b {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-inline-start: 6px;
+        vertical-align: middle;
+        border-radius: 2px;
+      }
+      #loading {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        background: #1b1f27;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="map"></canvas>
+    <div id="legend">
+      <div><b style="background: #9aa3b2"></b>כביש / <b style="background: #6fa8dc"></b>נתיב נסיעה / <b style="background: #f2c230"></b>נת״צ</div>
+      <div><b style="background: #e04c4c"></b>עצור / <b style="background: #f0f0f0; border: 1px solid #e04c4c"></b>תן זכות קדימה / <b style="background: #2ecc71"></b>רמזור / <b style="background: #c58af9"></b>כיכר</div>
+      <div><b style="background: #ffffff"></b>קו עצירה / <b style="background: #ffe08a"></b>מעבר חצייה / <b style="background: #3ddc84"></b>נקודת התחלה / <b style="background: #ff7a45"></b>מסלול</div>
+    </div>
+    <div id="tooltip"></div>
+    <div id="status">loading…</div>
+    <div id="loading">טוען עולם…</div>
+    <script type="module" src="/src/dev/worldMap.ts"></script>
+  </body>
+</html>

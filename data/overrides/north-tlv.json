@@ -1,0 +1,11 @@
+{
+  "$comment": "Hand-authored corrections applied by tools/world/build-world.ts after parsing and before building. Positions are [lon, lat]. See tools/world/overrides.ts for the schema.",
+  "nodeControls": [],
+  "approachControls": [],
+  "removeWays": [],
+  "extraCrossings": [],
+  "extraSigns": [],
+  "extraSpawnPoints": [],
+  "extraRoutes": [],
+  "laneOverrides": []
+}
