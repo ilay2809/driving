@@ -343,7 +343,14 @@ export function buildWorld(input: BuildInput): WorldFile {
     } else c.kind = isRoundabout ? 'roundabout' : 'junction';
 
     const maxW = Math.max(...c.arms.map((a) => a.width));
-    c.setback = c.kind === 'bend' || c.kind === 'merge' ? 0.5 : c.kind === 'dead_end' ? Math.max(maxW / 2, 3) : maxW / 2 + 1.0;
+    if (c.kind === 'bend' || c.kind === 'merge') {
+      // A sharp bend needs room for the turn: with lanes ending ~1 m apart at a 90° corner,
+      // vehicles on the two carriageways physically overlap. Grow the setback with the
+      // deflection angle (0 for a straight continuation → unchanged 0.5 m).
+      const [a, b] = c.arms as [Arm, Arm];
+      const deflection = Math.PI - Math.abs(angleDiff(a.outward, b.outward));
+      c.setback = 0.5 + (maxW / 2 + 0.5) * Math.min(1, deflection / (Math.PI / 2));
+    } else c.setback = c.kind === 'dead_end' ? Math.max(maxW / 2, 3) : maxW / 2 + 1.0;
 
     for (const arm of c.arms) {
       const L = roadLength.get(arm.road.id)!;
