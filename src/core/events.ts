@@ -55,6 +55,16 @@ export interface SimEventMap {
   'test:started': { routeId: string };
   'test:finished': { passed: boolean; points: number; violations: Violation[]; durationSec: number };
   'theory:answered': { questionId: string; correct: boolean };
+  /** Generic request from lesson scripts / coach to other systems (traffic, signals, renderer, vehicle). */
+  'coach:request': { kind: 'spawn_vehicle' | 'spawn_pedestrian' | 'set_signal' | 'highlight' | 'slow_motion' | 'brake' | 'clear_traffic'; payload: Record<string, unknown> };
+  'lesson:briefing': { lessonId: string; title: string; slides: { title: string; text: string; signs: string[]; diagram?: string }[] };
+  'lesson:hint': { text: string; icon?: string; seconds: number };
+  'lesson:highlight': { target: string; seconds: number };
+  /** The user pressed "continue" / closed a modal (context tells what was acknowledged). */
+  'ui:acknowledged': { context: string };
+  'theory:question': { questionId: string; text: string; answers: string[]; image: string | null };
+  'theory:answer': { questionId: string; index: number };
+  'examiner:maneuver': { kind: 'parallel_park' | 'pull_over' | 'reverse' | 'uturn' | 'emergency_stop' | 'hill_start'; text: string; status: 'requested' | 'completed' | 'failed' };
   'world:loaded': { name: string; lanes: number; junctions: number };
   'sim:paused': { paused: boolean };
   'sim:reset': { reason: string };
