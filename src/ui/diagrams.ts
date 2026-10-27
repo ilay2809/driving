@@ -36,7 +36,9 @@ function label(x: number, y: number, text: string, colour = C.text, size = 12, a
   return `<text x="${x}" y="${y}" text-anchor="${anchor}" ${FONT} font-size="${size}" font-weight="${weight}" fill="${colour}">${text}</text>`;
 }
 function caption(text: string, y = 20): string {
-  return `<rect x="0" y="${y - 15}" width="320" height="24" rx="6" fill="rgba(0,0,0,.45)"/>${label(160, y + 2, text, C.text, 12.5, 'middle', 700)}`;
+  // long captions shrink so they stay inside the 320 px wide diagram instead of being clipped
+  const size = text.length > 42 ? Math.max(9.5, (12.5 * 42) / text.length) : 12.5;
+  return `<rect x="0" y="${y - 15}" width="320" height="24" rx="6" fill="rgba(0,0,0,.45)"/>${label(160, y + 2, text, C.text, size, 'middle', 700)}`;
 }
 function dashes(x1: number, y1: number, x2: number, y2: number): string {
   return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${C.dash}" stroke-width="1.5" stroke-dasharray="8 7" opacity=".8"/>`;

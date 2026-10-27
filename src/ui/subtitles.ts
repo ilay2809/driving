@@ -114,6 +114,13 @@ export class Subtitles {
     return node;
   }
 
+  /** Remove the lesson hints (a new step started). */
+  clearHints(): void {
+    for (const t of this.hintTimers) clearTimeout(t);
+    this.hintTimers.clear();
+    this.hintsEl.replaceChildren();
+  }
+
   clear(): void {
     this.clearTimers();
     this.queue = [];

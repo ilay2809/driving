@@ -7,6 +7,7 @@
   "minutes": 8,
   "prerequisites": [],
   "spawnId": "tg_start",
+  "startAtKerb": true,
   "world": "training-ground",
   "traffic": { "density": 0, "pedestrians": 0.1, "seed": 1 },
   "hour": 10,
@@ -78,16 +79,17 @@
       "title": "ההילוכים והזחילה",
       "say": [
         "עכשיו ההילוכים. רגל על הבלם — תמיד לפני שמזיזים את הידית — ומעבירים ל-D.",
-        "הרפו מעט מהבלם. מרגישים? הרכב זוחל קדימה בלי גז. זו הזחילה — ככה חונים וככה עומדים בפקק. בלמו שוב."
+        "אנחנו חונים בצד הרחוב, ולפני שהרכב זז, אפילו מטר אחד: מראת שמאל, איתות שמאלה ומבט לכתף שמאל. ככה בכל יציאה מחניה.",
+        "ואז הרפו מעט מהבלם. מרגישים? הרכב זוחל קדימה בלי גז. זו הזחילה — ככה חונים וככה עומדים בפקק. בלמו שוב."
       ],
-      "instruction": "העבירו ל-D (עם רגל על הבלם), הרגישו את הזחילה ועצרו",
+      "instruction": "D (רגל על הבלם) → מראת שמאל, איתות שמאלה, כתף → הרפו מהבלם לזחילה של מטר → עצרו",
       "done": { "kind": "all", "of": [{ "kind": "vehicle", "gear": "D" }, { "kind": "distance", "metres": 1 }, { "kind": "stopped", "seconds": 1 }] },
       "triggers": [
-        { "when": { "kind": "vehicle", "gear": "D" }, "do": [{ "kind": "say", "text": "D משולב. עכשיו שחררו לאט את הבלם ותנו לרכב לזחול מטר — ואז בלמו.", "priority": 1 }] },
+        { "when": { "kind": "vehicle", "gear": "D" }, "do": [{ "kind": "say", "text": "D משולב. עכשיו מראת שמאל, איתות שמאלה, מבט לכתף — ושחררו לאט את הבלם. מטר אחד של זחילה, ואז בלמו.", "priority": 1 }] },
         { "when": { "kind": "violation", "types": ["HANDBRAKE_ON"] }, "do": [{ "kind": "say", "text": "בלם החניה עדיין משוך — משחררים אותו אחרי ששילבנו D, כשהרגל על הבלם.", "priority": 2 }] },
-        { "when": { "kind": "elapsed", "seconds": 40 }, "do": [{ "kind": "hint", "text": "בלם לחוץ → D → שחררו בלם חניה → הרפו מעט מהבלם → בלמו", "icon": "gear", "seconds": 8 }] }
+        { "when": { "kind": "elapsed", "seconds": 40 }, "do": [{ "kind": "hint", "text": "בלם לחוץ → D → שחררו בלם חניה → מראה, איתות שמאלה, כתף → הרפו מעט מהבלם → בלמו", "icon": "gear", "seconds": 8 }] }
       ],
-      "focus": ["WRONG_GEAR", "HANDBRAKE_ON", "HARSH_ACCELERATION"],
+      "focus": ["WRONG_GEAR", "HANDBRAKE_ON", "HARSH_ACCELERATION", "NO_INDICATOR_LANE_CHANGE", "NO_SHOULDER_CHECK"],
       "onDone": ["בדיוק ככה. הבלם הוא השולט — הגז רק מוסיף."]
     },
     {

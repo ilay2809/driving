@@ -6,6 +6,11 @@ import type { SimEventMap } from '@/core/events';
 import { VIOLATIONS, type Severity, type Violation, type ViolationType } from '@/rules/violations';
 import type { DebriefError, LessonCardData } from '@/ui';
 import { parkingReporterFor } from '@/app/parking';
+import type { WorldSession } from '@/app/WorldSession';
+import { rightOf } from '@/world/geo';
+
+/** Gap left between the car and the kerb when a lesson starts parked at the kerb (m). */
+export const KERB_START_GAP_M = 0.25;
 
 export class LessonMode {
   private current?: Lesson;
@@ -76,10 +81,13 @@ export class LessonMode {
       weather: lesson.weather,
     });
     if (!session) return;
+    if (lesson.startAtKerb) parkAtKerb(session);
     const theory = await app.content.theory().catch(() => []);
     const engine = new TheoryEngine(theory, app.profile);
     const { bus } = session.ctx;
     this.instructor = new Instructor(bus, session.dialogue, session.graph, { navigator: session.navigator, autoGreet: false, verbosity: 'high' });
+    // quiet while the briefing is on screen: the greeting must be the first thing the player hears
+    this.instructor.setMuted(true);
     const focus = new Set<ViolationType>();
     for (const step of lesson.steps) for (const t of step.focus) focus.add(t);
     this.instructor.setFocus([...focus]);
@@ -92,11 +100,14 @@ export class LessonMode {
     session.onExplain = (ctx) => void this.instructor?.explainHere(ctx);
     app.ui.setCoachPresence('instructor', app.instructorName);
 
-    const startTime = session.ctx.time;
+    // violations are debriefed from the moment the first step starts (not from the briefing)
+    let startTime = session.ctx.time;
     let lastPath = session.navigator.path;
     session.modeSystems.push({
       name: 'lesson-route-sync',
       update: () => {
+        // Enter ("המשך") acknowledges steps that wait for the player to read / look around
+        if (session.input.state.acknowledge) bus.emit('ui:acknowledged', { context: 'continue' });
         if (session.navigator.path !== lastPath) {
           lastPath = session.navigator.path;
           app.ui.setRoute(lastPath ?? null);
@@ -104,9 +115,16 @@ export class LessonMode {
       },
     });
     this.offs.push(
+      bus.on('lesson:step', (ev: SimEventMap['lesson:step']) => {
+        if (ev.lessonId !== lesson.id || !this.instructor?.isMuted) return;
+        this.instructor.setMuted(false);
+        startTime = session.ctx.time;
+      }),
       bus.on('lesson:completed', (ev: SimEventMap['lesson:completed']) => {
         if (ev.lessonId !== lesson.id) return;
         session.setPaused(true);
+        // Profile.attach already recorded the result; persist it now (the autosave only runs while driving)
+        void app.profile.save();
         const since = session.judge.history.filter((v) => v.time >= startTime && v.severity !== 'info');
         const next = lessons.find((l) => l.order > lesson.order);
         app.ui.showScreen('lessonDebrief', {
@@ -145,6 +163,17 @@ export class LessonMode {
     this.runner = undefined;
     this.instructor = undefined;
   }
+}
+
+/** Move the freshly spawned car from the lane centre to the right-hand kerb (sim:reset returns it there too). */
+export function parkAtKerb(session: WorldSession): void {
+  const { graph, spawn, vehicle } = session;
+  const m = graph.nearestLane(spawn.pos, { heading: spawn.heading, maxDist: 8 });
+  if (!m || m.lane.rightLine !== 'kerb') return;
+  const at = graph.laneAt(m.lane.id, m.s);
+  const lateral = Math.max(0, m.lane.width / 2 - session.ctx.player.width / 2 - KERB_START_GAP_M);
+  const r = rightOf(at.h);
+  vehicle.teleport([at.p[0] + r[0] * lateral, at.p[1] + r[1] * lateral], at.h);
 }
 
 function countBySeverity(vs: Violation[]): { minor: number; major: number; critical: number } {

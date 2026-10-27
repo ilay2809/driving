@@ -126,6 +126,40 @@ describe('UISystem', () => {
     expect(ui.currentScreen).toBeUndefined();
   });
 
+  it('in-drive quiz: a synchronous verdict still shows feedback, and a question pushed on top survives the first one closing', () => {
+    // the lesson runner answers inside the 'theory:answer' emit and may ask the next question right away
+    bus.on('theory:answer', (a) => {
+      bus.emit('theory:answered', { questionId: a.questionId, correct: false });
+      if (a.questionId === 'q1') bus.emit('theory:question', { questionId: 'q2', text: 'שאלה שנייה', answers: ['א', 'ב'], image: null });
+    });
+    bus.emit('theory:question', { questionId: 'q1', text: 'שאלה ראשונה', answers: ['א', 'ב'], image: null });
+    key(window, '1');
+    const modals = () => Array.from(root.querySelectorAll('.theory-modal')) as HTMLElement[];
+    expect(modals()).toHaveLength(2);
+    expect(modals()[0]!.querySelector('.feedback.wrong')).not.toBeNull();
+    expect(modals()[0]!.hidden).toBe(true);
+    expect(modals()[1]!.hidden).toBe(false);
+    vi.advanceTimersByTime(FEEDBACK_MS + 50);
+    // only the answered question closed; the new one is still on top and visible
+    expect(modals()).toHaveLength(1);
+    expect(modals()[0]!.textContent).toContain('שאלה שנייה');
+    expect(modals()[0]!.hidden).toBe(false);
+    expect(ui.currentScreen).toBe('theoryQuestion');
+  });
+
+  it('lesson hints belong to their step and the pill shows the step title', () => {
+    bus.emit('lesson:hint', { text: 'רמז ישן', seconds: 30 });
+    expect(root.querySelectorAll('.hints .hint')).toHaveLength(1);
+    bus.emit('lesson:step', { lessonId: 'L1', stepId: 's2', index: 1, total: 4, title: 'חגורת בטיחות' });
+    expect(root.querySelectorAll('.hints .hint')).toHaveLength(0);
+    bus.emit('lesson:hint', { text: 'רמז חדש', seconds: 30 });
+    expect(root.querySelector('.hints .hint')!.textContent).toContain('רמז חדש');
+    expect(root.querySelector('.lesson-step')!.textContent).toBe('שלב 2/4 — חגורת בטיחות');
+    bus.emit('lesson:completed', { lessonId: 'L1', passed: true, score: 90 });
+    expect(root.querySelectorAll('.hints .hint')).toHaveLength(0);
+    expect((root.querySelector('.lesson-step') as HTMLElement).hidden).toBe(true);
+  });
+
   it('stacks screens: push/pop keeps the one below, Escape calls the screen handler, F1 opens help', () => {
     const onBack = vi.fn();
     ui.showScreen('lessonList', { lessons: [{ id: 'a', order: 1, title: 'שיעור', minutes: 5, status: 'unlocked' }], onSelect: () => undefined, onBack });

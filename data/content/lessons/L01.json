@@ -7,6 +7,7 @@
   "minutes": 10,
   "prerequisites": ["L00"],
   "spawnId": "tg_start",
+  "startAtKerb": true,
   "world": "training-ground",
   "traffic": { "density": 0.1, "pedestrians": 0.1, "seed": 11 },
   "hour": 10,

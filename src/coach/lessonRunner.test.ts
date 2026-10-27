@@ -3,7 +3,7 @@ import type { SpeechRequest } from '@/core/events';
 import type { TheoryQuestion } from '@/content/schema';
 import { DialogueManager } from './dialogue';
 import { Instructor } from './instructor';
-import { LessonRunner } from './lessonRunner';
+import { LessonRunner, QUIZ_NEXT_DELAY_S, mentionsQuiz } from './lessonRunner';
 import { LessonSchema, type Lesson, type LessonInput } from './lessonSchema';
 import { Navigator } from './navigator';
 import { createTestContext, eventsNamed, spokenTexts } from './testUtils';
@@ -81,7 +81,7 @@ describe('LessonRunner', () => {
     t.bus.emit('ui:acknowledged', { context: 'briefing' });
     t.step(0.1, systems);
     expect(runner.runnerState).toBe('running');
-    expect(steps()).toEqual([{ lessonId: 'L_test', stepId: 'prep', index: 0, total: 3 }]);
+    expect(steps()).toEqual([{ lessonId: 'L_test', stepId: 'prep', index: 0, total: 3, title: 'הכנה' }]);
     expect(runner.progress.stepId).toBe('prep');
     // greeting first, then the step's sentences at priority 2
     t.advance(20, systems);
@@ -121,6 +121,10 @@ describe('LessonRunner', () => {
     expect(questions().length).toBe(1);
     t.bus.emit('theory:answer', { questionId: 'q1', index: 0 });
     expect(eventsNamed<{ correct: boolean }>(t, 'theory:answered')).toEqual([{ questionId: 'q1', correct: false }]);
+    // the question comes back only after the feedback pause
+    t.advance(QUIZ_NEXT_DELAY_S - 0.5, systems);
+    expect(questions().length).toBe(1);
+    t.advance(1, systems);
     expect(questions().length).toBe(2);
     t.ctx.player.speed = 0;
     t.advance(2, systems);
@@ -272,5 +276,66 @@ describe('LessonRunner', () => {
     t.advance(1.5, systems);
     expect(runner.runnerState).toBe('finished');
     expect(eventsNamed<{ passed: boolean }>(t, 'lesson:completed')[0]!.passed).toBe(true);
+  });
+
+  it('asks a step\'s quiz at the end when `done` does not wait for it, and holds the step until it is answered', () => {
+    const input: LessonInput = {
+      ...THREE_STEPS,
+      briefing: [],
+      steps: [
+        { id: 'drive', title: 'נסיעה', done: { kind: 'distance', metres: 10 }, quiz: ['q1', 'missing'] },
+        { id: 'last', title: 'סוף', done: { kind: 'elapsed', seconds: 1 } },
+      ],
+    };
+    const { t, runner, lesson, systems, steps } = setup(input);
+    runner.start(lesson);
+    t.advance(1, systems);
+    const questions = () => eventsNamed<{ questionId: string }>(t, 'theory:question');
+    expect(questions().length).toBe(0); // not asked while driving
+    t.ctx.player.speed = 5;
+    t.advance(3, systems); // 15 m → the driving part is done → the quiz starts
+    expect(questions().map((q) => q.questionId)).toEqual(['q1']);
+    expect(steps().map((s) => s.stepId)).toEqual(['drive']);
+    t.advance(2, systems);
+    expect(steps().length).toBe(1); // still waiting for the answer
+    t.bus.emit('theory:answer', { questionId: 'q1', index: 1 });
+    t.step(0.1, systems);
+    expect(steps().map((s) => s.stepId)).toEqual(['drive', 'last']);
+    expect(eventsNamed<{ correct: boolean }>(t, 'theory:answered')).toEqual([{ questionId: 'q1', correct: true }]);
+    t.advance(15, systems);
+    expect(spokenTexts(t).some((x) => x.includes('שאלה קצרה'))).toBe(true);
+  });
+
+  it('spaces consecutive questions and completes a quiz-only step once enough answers are right', () => {
+    const q2: TheoryQuestion = { ...QUESTIONS[0]!, id: 'q2', text: 'שאלה שנייה' };
+    const input: LessonInput = { ...THREE_STEPS, briefing: [], steps: [{ id: 'quiz', title: 'חידון', done: { kind: 'quiz_answered', minCorrect: 2 }, quiz: ['q1', 'q2'] }] };
+    const t0 = createTestContext({ mode: 'lesson' });
+    const dm = new DialogueManager(t0.bus, t0.settings, { defaultLinger: 0 });
+    const nav = new Navigator(t0.graph, t0.bus, dm);
+    const ins = new Instructor(t0.bus, dm, t0.graph, { autoGreet: false });
+    const runner = new LessonRunner(t0.bus, dm, nav, ins, t0.graph, { questionLookup: (id) => [QUESTIONS[0]!, q2].find((q) => q.id === id) });
+    const systems = [runner, nav, ins, dm];
+    runner.start(LessonSchema.parse(input));
+    t0.step(0.1, systems);
+    const questions = () => eventsNamed<{ questionId: string }>(t0, 'theory:question').map((q) => q.questionId);
+    expect(questions()).toEqual(['q1']);
+    t0.bus.emit('theory:answer', { questionId: 'q1', index: 1 });
+    expect(questions()).toEqual(['q1']); // q2 waits for the feedback pause
+    t0.advance(QUIZ_NEXT_DELAY_S + 0.2, systems);
+    expect(questions()).toEqual(['q1', 'q2']);
+    t0.bus.emit('theory:answer', { questionId: 'q2', index: 0 }); // wrong → asked again later
+    t0.advance(QUIZ_NEXT_DELAY_S + 0.2, systems);
+    expect(questions()).toEqual(['q1', 'q2', 'q2']);
+    expect(runner.runnerState).toBe('running');
+    t0.bus.emit('theory:answer', { questionId: 'q2', index: 1 });
+    t0.step(0.1, systems);
+    expect(runner.runnerState).toBe('finished');
+    expect(eventsNamed<{ passed: boolean; score: number }>(t0, 'lesson:completed')[0]).toEqual({ lessonId: 'L_test', passed: true, score: 100 });
+  });
+
+  it('mentionsQuiz finds quiz_answered anywhere in the condition tree', () => {
+    expect(mentionsQuiz({ kind: 'quiz_answered', minCorrect: 1 })).toBe(true);
+    expect(mentionsQuiz({ kind: 'all', of: [{ kind: 'stopped', seconds: 1, maxSpeedKmh: 1 }, { kind: 'any', of: [{ kind: 'quiz_answered', minCorrect: 2 }] }] })).toBe(true);
+    expect(mentionsQuiz({ kind: 'all', of: [{ kind: 'distance', metres: 5 }, { kind: 'parked', maxKerbDistance: 0.4, maxAngleDeg: 8 }] })).toBe(false);
   });
 });
