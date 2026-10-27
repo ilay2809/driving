@@ -6,6 +6,11 @@
  * lanes 120–350 m away, outside the player's view cone when possible) and
  * ≤ `pedestrians·40` pedestrians within 250 m. When the player is nowhere near the road
  * network (e.g. tests with a far-away parked player) the whole world is populated instead.
+ *
+ * Initial fill (first update of a session, see TrafficSystem): the same spawners run with
+ * `AutoSpawnOptions` that pick from the lanes / sidewalks around the player, allow the view
+ * cone and a shorter minimum distance (40 m for vehicles, 15 m for pedestrians), so the
+ * world is alive at once — never within 25 m straight ahead of the player.
  */
 import { angleDiff, dist2, forwardOf, projectOntoPolyline, rightOf, type Vec2 } from '@/world/geo';
 import type { Crossing, Lane } from '@/world/schema';
@@ -13,6 +18,7 @@ import type { Frame } from './agents';
 import { PED, SPAWN, VEHICLE_DIMS, VEHICLE_MIX, type VehicleKind } from './constants';
 import type { Seg } from './network';
 import { createPedestrianAgent, PedestrianAgent, placePedestrian } from './pedestrians';
+import type { PedEdge } from './sidewalks';
 import { obbGap } from './util';
 import { createVehicleAgent, parkOnSegment, placeOnSegment, VehicleAgent } from './vehicles';
 
@@ -47,6 +53,45 @@ export interface SpawnVehicleOptions {
   side?: 'right' | 'left';
   /** Lane the distance refers to (defaults to the player's lane). */
   laneId?: string;
+}
+
+/** Tuning of the initial fill at session start. */
+export const INITIAL_FILL = {
+  /** Vehicles no closer than this to the player … */
+  vehicleMinDist: 40,
+  /** … and half of them within this distance (in view when the road allows). */
+  vehicleNearMax: 200,
+  pedestrianMinDist: 15,
+  pedestrianNearMax: 120,
+  /** Nothing is placed within this distance straight ahead of the player. */
+  clearAheadM: 25,
+  /** Share of the targets placed in the near band. */
+  nearShare: 0.5,
+  attempts: 30,
+} as const;
+
+/** Options for the automatic spawners (defaults = steady state: 120–350 m, outside the view cone). */
+export interface AutoSpawnOptions {
+  minDist?: number;
+  maxDist?: number;
+  /** Allow a slot inside the player's view cone (initial fill); still never within `clearAheadM` straight ahead. */
+  inView?: boolean;
+  /** Candidate drive lanes (e.g. the lanes around the player) instead of the whole world. */
+  lanes?: readonly Lane[];
+  /** Candidate sidewalk edges likewise. */
+  sidewalkEdges?: readonly PedEdge[];
+}
+
+/** Is `p` within `metres` straight ahead of the player (inside a corridor `halfWidth` wide)? */
+export function aheadOfPlayer(frame: Frame, p: Vec2, metres: number, halfWidth = 6): boolean {
+  const pl = frame.player;
+  if (!pl) return false;
+  const f = forwardOf(pl.state.heading);
+  const wx = p[0] - pl.state.pos[0];
+  const wz = p[1] - pl.state.pos[1];
+  const along = wx * f[0] + wz * f[1];
+  const lateral = Math.abs(wx * f[1] - wz * f[0]);
+  return along > -pl.state.length && along < metres && lateral < halfWidth;
 }
 
 function inViewCone(frame: Frame, p: Vec2, maxDist: number): boolean {
@@ -92,23 +137,30 @@ function pickKind(host: SpawnHost): VehicleKind {
 }
 
 /** Try to spawn one automatic vehicle. Returns the agent or undefined when no slot was found. */
-export function spawnVehicleAuto(host: SpawnHost): VehicleAgent | undefined {
+export function spawnVehicleAuto(host: SpawnHost, opts: AutoSpawnOptions = {}): VehicleAgent | undefined {
   const frame = host.frame;
   const kind = pickKind(host);
   const dims = VEHICLE_DIMS[kind];
-  const busLanes = kind === 'bus' ? frame.net.world.lanes.filter((l) => frame.net.busRoads.has(l.roadId) && (l.kind === 'drive' || l.kind === 'bus')) : [];
-  for (let attempt = 0; attempt < SPAWN.attempts; attempt++) {
+  const pool = opts.lanes;
+  const minDist = opts.minDist ?? SPAWN.vehicleMinDist;
+  const maxDist = opts.maxDist ?? SPAWN.vehicleRadius;
+  const attempts = pool ? INITIAL_FILL.attempts : SPAWN.attempts;
+  const busLanes = kind === 'bus' ? (pool ?? frame.net.world.lanes).filter((l) => frame.net.busRoads.has(l.roadId) && (l.kind === 'drive' || l.kind === 'bus')) : [];
+  for (let attempt = 0; attempt < attempts; attempt++) {
     let lane: Lane | undefined;
-    if (kind === 'bus' && busLanes.length > 0 && attempt < SPAWN.attempts - 4) lane = busLanes[Math.floor(frame.rng() * busLanes.length)];
+    if (kind === 'bus' && busLanes.length > 0 && attempt < attempts - 4) lane = busLanes[Math.floor(frame.rng() * busLanes.length)];
+    else if (pool) lane = pool[Math.floor(frame.rng() * pool.length)];
     else lane = frame.net.randomDriveLane(frame.rng);
-    if (!lane || lane.length < 2 * SPAWN.laneEndMargin + 10) continue;
+    if (!lane || lane.kind !== 'drive' && lane.kind !== 'bus' || lane.length < 2 * SPAWN.laneEndMargin + 10) continue;
     const s = SPAWN.laneEndMargin + frame.rng() * (lane.length - 2 * SPAWN.laneEndMargin);
     const seg = frame.net.seg(lane.id);
     const p = frame.net.at(seg, s).p;
     if (!host.interest.offWorld) {
       const d = dist2(p, host.interest.centre);
-      if (d < SPAWN.vehicleMinDist || d > SPAWN.vehicleRadius) continue;
-      if (attempt < SPAWN.attempts - 4 && inViewCone(frame, p, SPAWN.viewConeDistance)) continue;
+      if (d < minDist || d > maxDist) continue;
+      if (opts.inView) {
+        if (aheadOfPlayer(frame, p, INITIAL_FILL.clearAheadM)) continue;
+      } else if (attempt < attempts - 4 && inViewCone(frame, p, SPAWN.viewConeDistance)) continue;
     }
     if (!spawnSlotClear(host, seg, s, dims.length)) continue;
     const agent = createVehicleAgent(host.nextVehicleId(), kind, frame.rng, frame.time);
@@ -122,16 +174,25 @@ export function spawnVehicleAuto(host: SpawnHost): VehicleAgent | undefined {
   return undefined;
 }
 
-export function spawnPedestrianAuto(host: SpawnHost): PedestrianAgent | undefined {
+export function spawnPedestrianAuto(host: SpawnHost, opts: AutoSpawnOptions = {}): PedestrianAgent | undefined {
   const frame = host.frame;
-  for (let attempt = 0; attempt < SPAWN.attempts; attempt++) {
-    const pt = frame.sidewalks.randomSidewalkPoint(frame.rng);
+  const pool = opts.sidewalkEdges;
+  const minDist = opts.minDist ?? SPAWN.pedestrianMinDist;
+  const maxDist = opts.maxDist ?? SPAWN.pedestrianRadius;
+  const attempts = pool ? INITIAL_FILL.attempts : SPAWN.attempts;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    let pt: { edge: PedEdge; t: number } | undefined;
+    if (pool) {
+      if (pool.length === 0) return undefined;
+      const edge = pool[Math.floor(frame.rng() * pool.length)]!;
+      pt = { edge, t: frame.rng() * edge.length };
+    } else pt = frame.sidewalks.randomSidewalkPoint(frame.rng);
     if (!pt) return undefined;
     const p = frame.sidewalks.at(pt.edge, pt.t).p;
     if (!host.interest.offWorld) {
       const d = dist2(p, host.interest.centre);
-      if (d < SPAWN.pedestrianMinDist || d > SPAWN.pedestrianRadius) continue;
-      if (attempt < SPAWN.attempts - 4 && inViewCone(frame, p, SPAWN.pedViewConeDistance)) continue;
+      if (d < minDist || d > maxDist) continue;
+      if (!opts.inView && attempt < attempts - 4 && inViewCone(frame, p, SPAWN.pedViewConeDistance)) continue;
     }
     let tooClose = false;
     for (const other of frame.pedestriansNear(p, 3)) if (dist2(other.pos, p) < 1.5) tooClose = true;

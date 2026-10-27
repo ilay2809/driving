@@ -34,6 +34,50 @@ describe('Instructor', () => {
     ins.dispose();
   });
 
+  it('briefs the pull-out routine once after the free-drive greeting, and drops it once the car rolls', () => {
+    const { t, says, systems } = setup({ mode: 'training_ground' });
+    t.ctx.player.speed = 0;
+    t.step(0.1, systems);
+    t.advance(12, systems); // the greeting finishes, the briefing starts
+    const texts = says().map((s) => s.text);
+    expect(texts.length).toBe(2);
+    expect(texts[1]).toMatch(/חגורה/);
+    expect(texts[1]).toMatch(/איתות שמאלה/);
+    expect(texts[1]).toMatch(/כתף/);
+    t.advance(30, systems);
+    expect(says().length).toBe(2); // once only
+    // a pupil who drives off immediately does not get the briefing read out mid-manoeuvre
+    const quick = setup({ mode: 'free' });
+    quick.t.step(0.1, quick.systems);
+    quick.t.ctx.player.speed = 5;
+    quick.t.advance(20, quick.systems);
+    expect(quick.says().length).toBe(1);
+    // lessons brief the pull-out themselves
+    const lesson = setup({ mode: 'lesson' });
+    lesson.ins.greet('lesson');
+    lesson.t.advance(20, lesson.systems);
+    expect(lesson.says().length).toBe(1);
+  });
+
+  it('phrases the pull-out observations as leaving the parking spot, not as a lane change', () => {
+    const { t, violation, says, systems } = setup({ autoGreet: false });
+    t.step(0.1, systems);
+    violation('NO_INDICATOR_LANE_CHANGE', { side: 'left', maneuver: 'pull_out' });
+    expect(says().length).toBe(1);
+    expect(says()[0]!.text).toContain('מהחניה');
+    expect(says()[0]!.text).not.toContain('נתיב');
+    t.advance(9, systems);
+    violation('NO_SHOULDER_CHECK', { side: 'left', maneuver: 'pull_out' });
+    expect(says()[1]!.text).toContain('מהחניה');
+    t.advance(9, systems);
+    violation('NO_MIRROR_CHECK', { side: 'left', manoeuvre: 'pull_out' });
+    expect(says()[2]!.text).toContain('מהחניה');
+    // a plain lane change keeps the lane-change wording
+    t.advance(30, systems);
+    violation('NO_INDICATOR_LANE_CHANGE', { side: 'right' });
+    expect(says()[3]!.text).toContain('נתיב');
+  });
+
   it('speaks violation advice with a priority by severity and de-duplicates per type', () => {
     const { t, dm, violation, says, systems } = setup({ autoGreet: false });
     t.step(0.1, systems);

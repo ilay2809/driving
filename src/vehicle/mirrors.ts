@@ -31,9 +31,9 @@ export interface MirrorPlacement {
 
 /** Positions are in the car frame whose origin sits 0.6 m above the ground (see CarModel). */
 export const DEFAULT_MIRROR_PLACEMENTS: Record<MirrorName, MirrorPlacement> = {
-  left: { position: [-1.0, 0.38, -1.1], yaw: Math.PI - 0.23, pitch: -0.04, fov: 22, width: 256, height: 144 },
-  right: { position: [1.0, 0.38, -1.1], yaw: Math.PI + 0.26, pitch: -0.04, fov: 26, width: 256, height: 144 },
-  rear: { position: [-0.05, 0.62, -0.8], yaw: Math.PI, pitch: 0.02, fov: 13, width: 384, height: 144 },
+  left: { position: [-1.0, 0.4, -0.85], yaw: Math.PI - 0.23, pitch: -0.04, fov: 22, width: 256, height: 144 },
+  right: { position: [1.0, 0.4, -0.85], yaw: Math.PI + 0.26, pitch: -0.04, fov: 26, width: 256, height: 144 },
+  rear: { position: [-0.05, 0.7, -0.38], yaw: Math.PI, pitch: 0.02, fov: 13, width: 384, height: 144 },
 };
 
 /** Flip the U coordinate of a plane so a backwards render reads as a mirror image. */

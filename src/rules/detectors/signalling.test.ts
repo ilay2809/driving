@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RoadGraph } from '@/world/graph';
 import { buildTrainingGround } from '@/world/testWorld';
-import { ScriptedDrive, runScenario, type ScenarioOptions } from '../scripted';
+import { ScriptedDrive, runScenario, timeToFirstStop, type ScenarioOptions } from '../scripted';
 
 const world = buildTrainingGround();
 const g = new RoadGraph(world);
@@ -152,6 +152,51 @@ describe('SignallingDetector — pulling out from the kerb', () => {
     const v = r.violations[0]!;
     expect(v.context).toBe('ביציאה מהחניה');
     expect(v.details).toMatchObject({ side: 'left', manoeuvre: 'pull_out' });
+    // all three are tagged as a pull-out (not a lane change) so the coach phrases them as "יציאה מחניה"
+    for (const x of r.violations.filter((y) => y.severity !== 'info')) {
+      expect(x.details).toMatchObject({ side: 'left', maneuver: 'pull_out' });
+      expect(x.context).toBe('ביציאה מהחניה');
+    }
+  });
+
+  it('free drive: the very first move-off of the session (car never moved yet) is not judged', () => {
+    for (const mode of ['free', 'training_ground'] as const) {
+      const r = runScenario(world, g, path, { ...base, ctx: { mode } });
+      expect(r.nonInfo).toEqual([]);
+    }
+  });
+
+  it('free drive: a later pull-out (after driving, stopping ≥ 3 s at the kerb) is judged as a pull-out', () => {
+    const later: ScenarioOptions = {
+      startS: 0,
+      endS: 80,
+      ctx: { mode: 'training_ground' },
+      profile: [
+        { atS: 0, speedKmh: 20 },
+        { atS: 25, speedKmh: 0, hold: 4 },
+        { atS: 40, speedKmh: 20 },
+      ],
+    };
+    const r = runScenario(world, g, path, later);
+    expect(r.nonInfo).toEqual(['NO_INDICATOR_LANE_CHANGE', 'NO_MIRROR_CHECK', 'NO_SHOULDER_CHECK']);
+    for (const x of r.violations.filter((y) => y.severity !== 'info')) expect(x.details).toMatchObject({ side: 'left', maneuver: 'pull_out' });
+    const tStop = timeToFirstStop(g, path, later);
+    const ok = runScenario(world, g, path, {
+      ...later,
+      events: [
+        { atTime: tStop + 1.0, indicator: 'left' },
+        { atTime: tStop + 2.0, glance: 'left_mirror' },
+        { atTime: tStop + 2.5, glance: 'left_shoulder' },
+        { atS: 55, indicator: 'off' },
+      ],
+    });
+    expect(ok.nonInfo).toEqual([]);
+  });
+
+  it('free drive: a move-off within the first 3 s of the session is not judged even after a reset of the odometer', () => {
+    // standing 3 s is required to count as parked; a session that is exactly that young is still "the first start"
+    const r = runScenario(world, g, path, { ...base, ctx: { mode: 'free' }, profile: [{ atS: 20, speedKmh: 0, hold: 3.05 }, { atS: 30, speedKmh: 20 }] });
+    expect(r.nonInfo).toEqual([]);
   });
 
   it('left indicator, left mirror and left shoulder before moving off → nothing', () => {
