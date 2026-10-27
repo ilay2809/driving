@@ -1,0 +1,96 @@
+{
+  "id": "L12",
+  "order": 12,
+  "title": "לילה וגשם",
+  "subtitle": "אורות ומגבים, שלוש שניות, הולכי רגל בחושך",
+  "summary": "נסיעת ערב גשומה בצהלה, רמת החייל והדר יוסף: הכנת הרכב (אורות נמוכים, מגבים), מרחק עקיבה של שלוש שניות ומהירות מותאמת, זיהוי הולכי רגל בחושך, ועצירה בצד בתנאים קשים.",
+  "minutes": 15,
+  "prerequisites": ["L11"],
+  "spawnId": "tlv_tzahala",
+  "world": "north-tlv",
+  "traffic": { "density": 0.3, "pedestrians": 0.3, "seed": 112 },
+  "hour": 20,
+  "weather": "rain",
+  "briefing": [
+    {
+      "title": "אורות",
+      "text": "ב״זמן תאורה״ (מרבע שעה אחרי השקיעה) ובכל ראות לקויה — **אור נמוך**. אור גבוה רק בדרך לא מוארת, ומעמעמים מול רכב מתקרב.\n\nבחורף (1.11–31.3) אורות גם ביום בדרך שאינה עירונית. פנסי ערפל — רק בערפל, בגשם שוטף או בשלג.",
+      "signs": []
+    },
+    {
+      "title": "גשם",
+      "text": "אחיזה נמוכה, בלימה ארוכה, ראות קצרה: **שלוש שניות** מהרכב שלפנינו, מהירות מתחת למותר, בלימה והאצה עדינות.\n\nהגשם הראשון מסוכן במיוחד. בשלולית ההגה נעשה קל — מרפים מהגז, לא בולמים בחדות, הגה ישר.",
+      "signs": ["141"]
+    },
+    {
+      "title": "לילה",
+      "text": "רואים רק עד טווח האורות (כ-30 מ׳ באור נמוך) — המהירות חייבת לאפשר עצירה **בתוך** המרחק המואר. הולכי רגל בבגדים כהים מופיעים מאוחר: ליד מעברים ותחנות מאטים ומסתכלים אל המדרכות.\n\nסנוור? מאטים, מיימינים, מביטים לשפת הכביש.",
+      "signs": ["135", "136"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "lights_wipers",
+      "title": "אורות ומגבים",
+      "say": ["ערב, ויורד גשם. לפני שזזים: אור נמוך, מגבים, חגורה. ובלי אור גבוה — הרחוב מואר והוא רק יסנוור."],
+      "instruction": "אור נמוך → מגבים → חגורה",
+      "done": { "kind": "vehicle", "lights": "low", "wipers": true, "seatbelt": true },
+      "triggers": [{ "when": { "kind": "elapsed", "seconds": 20 }, "do": [{ "kind": "hint", "text": "מקש האורות (אור נמוך), מקש המגבים, חגורה", "icon": "lights", "seconds": 6 }] }],
+      "focus": ["SEATBELT"],
+      "onDone": ["מוכנים לגשם."]
+    },
+    {
+      "id": "wet_drive",
+      "title": "נסיעה בגשם",
+      "say": ["נוסעים לרמת החייל. בגשם: שלוש שניות מהרכב שלפנינו, עשרה קמ״ש פחות מהמותר, והכול בעדינות — גז, בלם והגה."],
+      "instruction": "סעו לפי הניווט: 3 שניות מרחק, מהירות מותאמת",
+      "navigateTo": { "spawnId": "tlv_ramathahayal" },
+      "done": { "kind": "reach", "spawnId": "tlv_ramathahayal", "radius": 40 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["TAILGATING"] }, "do": [{ "kind": "say", "text": "בגשם — שלוש שניות. מרחק הבלימה כמעט כפול.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR", "SPEEDING_MAJOR"] }, "do": [{ "kind": "say", "text": "בכביש רטוב המהירות המותרת היא יותר מדי. להוריד.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "בלימה חדה על כביש רטוב — ככה מחליקים. לצפות מראש ולבלום רך.", "priority": 2 }] }
+      ],
+      "focus": ["TAILGATING", "SPEEDING_MINOR", "HARSH_BRAKING", "LANE_DEPARTURE"],
+      "onDone": ["רמת החייל. ממשיכים להדר יוסף — שימו לב למדרכות."]
+    },
+    {
+      "id": "dark_pedestrians",
+      "title": "הולכי רגל בחושך",
+      "say": ["בחושך ובגשם הולכי רגל נראים מאוחר. ליד כל מעבר חצייה ותחנה — רגל מהגז, מבט לשתי המדרכות, ומוכנים לעצור."],
+      "instruction": "סעו לפי הניווט; האטה ליד מעברי חצייה",
+      "navigateTo": { "spawnId": "tlv_hadaryosef" },
+      "done": { "kind": "reach", "spawnId": "tlv_hadaryosef", "radius": 40 },
+      "triggers": [
+        { "when": { "kind": "distance", "metres": 250 }, "do": [{ "kind": "spawn_pedestrian", "nearest": true }, { "kind": "say", "text": "הולך רגל ליד המעבר — רואים אותו? בחושך צריך לחפש אותם.", "priority": 2 }] },
+        { "when": { "kind": "distance", "metres": 700 }, "do": [{ "kind": "spawn_pedestrian", "nearest": true }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! בחושך מאטים לפני המעבר גם כשלא רואים אף אחד.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "ראית אותו בזמן. יפה.", "priority": 1 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS", "SPEEDING_MINOR"],
+      "onDone": ["הדר יוסף. עוד קצת — ועצירה בצד בתל ברוך."]
+    },
+    {
+      "id": "pull_over_dark",
+      "title": "עצירה בצד בחושך ובגשם",
+      "say": ["ביעד נעצור בצד ימין: מראה, איתות ימינה מוקדם, האטה הדרגתית — בכביש רטוב הכול לוקח יותר זמן — ו-P. בלילה משאירים אורות חניה אם עומדים בדרך לא מוארת."],
+      "instruction": "עצירה בצד ביעד (P)",
+      "navigateTo": { "spawnId": "tlv_telbaruch" },
+      "done": { "kind": "all", "of": [{ "kind": "reach", "spawnId": "tlv_telbaruch", "radius": 45 }, { "kind": "parked", "maxKerbDistance": 0.6, "maxAngleDeg": 10 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["ILLEGAL_PARKING", "ILLEGAL_STOP"] }, "do": [{ "kind": "say", "text": "לא כאן — בדקו אבני שפה ומרחק מהצומת.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["KERB_STRIKE"] }, "do": [{ "kind": "say", "text": "המדרכה — בחושך קשה להעריך מרחק; לאט יותר.", "priority": 1 }] }
+      ],
+      "focus": ["ILLEGAL_PARKING", "PARKING_TOO_FAR", "KERB_STRIKE"],
+      "quiz": ["0260", "1529", "0853", "0852", "1773"],
+      "onDone": ["עצרנו. נסיעת לילה בגשם — מאחורינו."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["lights", "rain_night", "following_distance", "pedestrian_crossings", "weather", "lights"],
+  "debrief": [
+    "בגשם ובלילה הכול מתארך: מרחק, בלימה, זיהוי. לכן מאטים, מגדילים מרחק ומחפשים את הולכי הרגל.",
+    "אור נמוך בעיר, מגבים לפי הצורך, ושלוש שניות — שגרה של חורף.",
+    "בשיעור הבא: מצבי חירום."
+  ]
+}

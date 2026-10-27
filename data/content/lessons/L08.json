@@ -1,0 +1,105 @@
+{
+  "id": "L08",
+  "order": 8,
+  "title": "מהירות, מרחק עקיבה ואזור 30",
+  "subtitle": "30 ברחוב מיתון, פס האטה, שתי שניות מאחורי רכב איטי, ו-50 כשפנוי",
+  "summary": "מתחילים ברחוב החצב (חד-סטרי, אזור 30, פס האטה), ממשיכים לשדרה מאחורי רכב איטי ומתרגלים את כלל שתי השניות, ואז נוסעים במהירות המותרת כשהדרך פנויה — בלי לגרור ובלי לחרוג.",
+  "minutes": 10,
+  "prerequisites": ["L07"],
+  "spawnId": "tg_oneway",
+  "world": "training-ground",
+  "traffic": { "density": 0.3, "pedestrians": 0.3, "seed": 88 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "המהירויות",
+      "text": "**50** בדרך עירונית. **30** באזור מיתון תנועה (222) וברחוב משולב (220). **80 / 90 / 110** מחוץ לעיר. תמרור **426** קובע מהירות מיוחדת עד הצומת הקרוב או עד 427.\n\nהמספר הוא תקרה — לא יעד. ליד בתי ספר, במעברי חצייה, בגשם ובחושך — פחות.",
+      "signs": ["426", "427", "222", "223", "424"]
+    },
+    {
+      "title": "כלל שתי השניות",
+      "text": "בוחרים נקודה קבועה בצד הדרך; כשהרכב שלפנינו עובר אותה מתחילים לספור ״אלף ואחת, אלף ושתיים״. אם הגענו לפני שסיימנו — קרוב מדי.\n\n**בגשם — שלוש שניות.** מרחק נכון נותן גם שדה ראייה: רואים מעבר לרכב שלפנינו.",
+      "signs": []
+    },
+    {
+      "title": "לא לאט מדי",
+      "text": "נסיעה איטית בהרבה מהתנועה בלי סיבה מעכבת ומסוכנת, ובטסט נרשמת כחוסר ביטחון. כשהדרך פנויה והמותר 50 — נוסעים 45–50, חלק ובטוח.",
+      "signs": ["144", "821"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "zone30",
+      "title": "אזור 30",
+      "say": ["רחוב החצב: תמרור חד-סטרי, ותמרור 30. כאן נוסעים עשרים עד שלושים — לא יותר. הרגל קלה על הגז, עין על המדרכות."],
+      "instruction": "שמרו על 20–30 קמ״ש",
+      "done": { "kind": "speed_in_range", "min": 18, "max": 31, "seconds": 4 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["SPEED_LIMIT_CHANGED"] }, "do": [{ "kind": "say", "text": "המהירות המותרת: שלושים.", "priority": 1 }, { "kind": "highlight", "target": "speedometer", "seconds": 4 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR", "SPEEDING_MAJOR"] }, "do": [{ "kind": "say", "text": "מעל שלושים. באזור מיתון תנועה הסיכוי של הולך רגל לשרוד פגיעה תלוי בדיוק בקמ״ש האלה.", "priority": 2 }] }
+      ],
+      "focus": ["SPEEDING_MINOR", "SPEEDING_MAJOR"],
+      "onDone": ["מהירות נכונה. לפנינו פס האטה."]
+    },
+    {
+      "id": "bump",
+      "title": "פס האטה",
+      "say": ["פס האטה: מאטים לפניו, עוברים אותו באיטיות אחידה — לא בולמים עליו ולא מאיצים מיד אחריו."],
+      "instruction": "האטה לפני הפס, מעבר איטי",
+      "done": { "kind": "reach", "pos": [-55, 120], "radius": 10 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["HARSH_BRAKING"] }, "do": [{ "kind": "say", "text": "בלימה חדה על הפס. מאטים לפניו, לא עליו.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["HARSH_ACCELERATION"] }, "do": [{ "kind": "say", "text": "האצה חדה אחרי הפס — אנחנו עדיין באזור 30.", "priority": 1 }] }
+      ],
+      "focus": ["HARSH_BRAKING", "HARSH_ACCELERATION", "SPEEDING_MINOR"],
+      "onDone": ["עברנו חלק. ממשיכים מזרחה, ובצומת האלון — שמאלה צפונה, ואז שמאלה לשדרה."]
+    },
+    {
+      "id": "following",
+      "title": "מרחק עקיבה",
+      "say": ["בשדרה ניסע מאחורי רכב איטי. לא עוקפים — מתרגלים מרחק: בוחרים עמוד, סופרים שתי שניות מהרגע שהוא עובר אותו."],
+      "instruction": "שמאלה → שמאלה לשדרה → שתי שניות מאחורי הרכב האיטי",
+      "navigateTo": { "junctionId": "n11", "via": ["n12", "n22", "n21"] },
+      "done": { "kind": "reach", "junctionId": "n11", "radius": 35 },
+      "triggers": [
+        { "when": { "kind": "passed_junction", "junctionId": "n21", "turn": "left" }, "do": [{ "kind": "spawn_vehicle", "where": "ahead", "distance": 35, "speedKmh": 40 }, { "kind": "say", "text": "רכב איטי לפנינו. שתי שניות — ולא פחות.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["TAILGATING"] }, "do": [{ "kind": "say", "text": "קרוב מדי. אם הוא יבלום עכשיו — אין לנו זמן. להרפות מהגז.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה" }, { "kind": "say", "text": "בלמתי. זכות קדימה לפני הכניסה לשדרה.", "priority": 3 }] }
+      ],
+      "focus": ["TAILGATING", "HARSH_BRAKING", "NO_INDICATOR_TURN", "FAILED_TO_YIELD"],
+      "onDone": ["מרחק טוב. ברמזור ממשיכים ישר."]
+    },
+    {
+      "id": "fifty",
+      "title": "50 כשפנוי",
+      "say": ["אחרי הרמזור הדרך פנויה והמותר חמישים. מאיצים בעדינות לארבעים וחמש–חמישים, ושומרים."],
+      "instruction": "ישר ברמזור → 40–50 קמ״ש כשפנוי",
+      "navigateTo": { "junctionId": "n01", "via": ["n11"] },
+      "done": { "kind": "all", "of": [{ "kind": "passed_junction", "junctionId": "n11", "turn": "straight" }, { "kind": "speed_in_range", "min": 36, "max": 51, "seconds": 3 }] },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 85 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "violation", "types": ["TOO_SLOW"] }, "do": [{ "kind": "say", "text": "הדרך פנויה — אפשר להגיע לחמישים. איטי מדי גם זו טעות.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR"] }, "do": [{ "kind": "say", "text": "מעל חמישים. חמישים זה הגג.", "priority": 2 }] }
+      ],
+      "focus": ["TOO_SLOW", "SPEEDING_MINOR"],
+      "onDone": ["מהירות נכונה ויציבה. לפני הצומת — מאטים."]
+    },
+    {
+      "id": "finish",
+      "title": "סיום",
+      "say": ["האטה הדרגתית ועצירה בצד לפני צומת התמר."],
+      "instruction": "עצירה בצד לפני הצומת",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n01", "radius": 50 }, { "kind": "stopped", "seconds": 2 }] },
+      "quiz": ["0388", "0137", "0332", "0654", "0807"],
+      "onDone": ["סיימנו."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["speed_limits", "following_distance", "calm_zones_bumps", "speed", "distance"],
+  "debrief": [
+    "שלושה דברים: 30 הוא 30, שתי שניות הן המינימום, ו-50 כשפנוי זה לא ״מהר״ — זה נכון.",
+    "מרחק העקיבה הוא ההרגל שמציל הכי הרבה פחים — ואת רוב הטסטים.",
+    "בשיעור הבא: חניה."
+  ]
+}

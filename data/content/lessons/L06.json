@@ -1,0 +1,115 @@
+{
+  "id": "L06",
+  "order": 6,
+  "title": "מעברי חצייה והולכי רגל",
+  "subtitle": "תקנה 67: מי שמתכוון לחצות — קודם",
+  "summary": "ארבעה מפגשים עם הולכי רגל: במעבר מרומזר בפנייה שמאלה, במעבר חצייה באמצע רחוב שקט, במעבר שלפני הרמזור, ובמעבר שלפני תמרור עצור — בכל פעם זיהוי מוקדם, האטה ועצירה נכונה.",
+  "minutes": 12,
+  "prerequisites": ["L05"],
+  "spawnId": "tg_main_w",
+  "world": "training-ground",
+  "traffic": { "density": 0.2, "pedestrians": 0.6, "seed": 66 },
+  "hour": 12,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "תקנה 67",
+      "text": "נהג המתקרב למעבר חצייה **מאט**, ונותן זכות קדימה להולך רגל **החוצה או המתכוון לחצות** — גם מי שעומד על המדרכה ומסתכל לכביש.\n\nלא מסמנים לו ביד ״תעבור״, לא ״מזרזים״ — עוצרים וממתינים שיסיים.",
+      "signs": ["306", "135", "811"]
+    },
+    {
+      "title": "שלושה איסורים",
+      "text": "- אסור **לעקוף** רכב שעצר או האט לפני מעבר חצייה.\n- אסור **לעצור או לחנות** על המעבר ו-12 מ׳ לפניו.\n- במעבר **מרומזר**, כשלהולכי הרגל ירוק והם חוצים את הרחוב שאליו פונים — הם קודמים גם כשלנו ירוק.",
+      "signs": ["718", "719"],
+      "diagram": "parking_12m"
+    },
+    {
+      "title": "זיהוי מוקדם",
+      "text": "תמרור 135 והפסים הלבנים נראים מרחוק — הרגל יורדת מהגז כבר אז, והמבט סורק את **שתי** המדרכות. ליד בתי ספר (136) ילדים רצים לכביש בלי להסתכל.\n\nאי-מתן זכות קדימה להולך רגל במעבר היא עבירה קריטית — בטסט, כישלון.",
+      "signs": ["136", "220"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "signalised_left",
+      "title": "מעבר מרומזר בפנייה שמאלה",
+      "say": ["ברמזור פונים שמאלה לרחוב הדקל. בירוק שלנו, גם להולכי הרגל במעבר של הדקל יש ירוק — אם מישהו חוצה, עוצרים לפני המעבר ונותנים לו לסיים."],
+      "instruction": "ירוק → שמאלה → עצירה להולכי הרגל במעבר של רחוב הדקל",
+      "navigateTo": { "junctionId": "n10", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 62 }, "do": [{ "kind": "spawn_pedestrian", "crossingId": "c_dekel_n" }, { "kind": "say", "text": "הולך רגל במעבר של רחוב הדקל. בפנייה — הוא קודם.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! הולך רגל חוצה — עוצרים לפני המעבר, לא לידו.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["LEFT_TURN_NO_YIELD"] }, "do": [{ "kind": "say", "text": "גם לרכב ממול יש זכות קדימה בפנייה שמאלה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "חיכית שיסיים לחצות. מצוין.", "priority": 1 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS", "LEFT_TURN_NO_YIELD"],
+      "onDone": ["צפונה ברחוב הדקל. בצומת הבא — שמאלה לרחוב הברוש, שם יש מעבר חצייה באמצע הרחוב."]
+    },
+    {
+      "id": "midblock",
+      "title": "מעבר חצייה בקטע רחוב",
+      "say": ["רחוב הברוש: תמרור ״מעבר חצייה בקרבת מקום״, ואחריו המעבר. מאטים כבר מהתמרור, מבט לשתי המדרכות — ואם מישהו ניגש למעבר, עוצרים לפניו."],
+      "instruction": "האטה מהתמרור → עצירה להולך רגל שניגש למעבר → המשך",
+      "navigateTo": { "junctionId": "n00", "via": ["n10"] },
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 140 }, { "kind": "reach", "junctionId": "n00", "radius": 25 }] },
+      "triggers": [
+        { "when": { "kind": "reach", "pos": [-60, -120], "radius": 75 }, "do": [{ "kind": "spawn_pedestrian", "crossingId": "c_mid" }, { "kind": "say", "text": "מעבר חצייה לפנינו — והולך רגל מתקרב אליו. מי שמתכוון לחצות קודם.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["APPROACHING_CROSSING"] }, "do": [{ "kind": "highlight", "target": "crossing", "seconds": 5 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! הוא התכוון לחצות. תקנה 67 — עוצרים.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "זיהית אותו מוקדם ועצרת בעדינות. ככה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR"] }, "do": [{ "kind": "say", "text": "ליד מעבר חצייה המהירות נמוכה מהמותר — כזו שמאפשרת לעצור.", "priority": 1 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "PEDESTRIAN_NEAR_MISS", "SPEEDING_MINOR"],
+      "onDone": ["עברנו. בעיקול דרומה לרחוב התמר, ובצומת שמאלה לשדרה."]
+    },
+    {
+      "id": "before_signals",
+      "title": "הולך רגל לפני הרמזור",
+      "say": ["בשדרה, לפני הרמזור, יש מעבר חצייה מרומזר. מי שכבר על המעבר — קודם, גם אם לנו ירוק. מי שמחכה על המדרכה באדום שלו — ממתין. ברמזור פונים ימינה."],
+      "instruction": "מעבר מרומזר לפני הרמזור → ימינה לרחוב הדקל",
+      "navigateTo": { "junctionId": "n12", "via": ["n01", "n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 95 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }, { "kind": "spawn_pedestrian", "crossingId": "c_main_w" }, { "kind": "say", "text": "הולך רגל ליד המעבר שלפני הרמזור. אם הוא כבר על המעבר — עוצרים לו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! הוא היה על המעבר.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["ILLEGAL_STOP"] }, "do": [{ "kind": "say", "text": "עצרנו על המעבר. עוצרים לפניו — כך הולכי הרגל יכולים לחצות.", "priority": 2 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "ILLEGAL_STOP", "WRONG_LANE_FOR_TURN"],
+      "onDone": ["דרומה ברחוב הדקל — ולפני העצור, עוד מעבר."]
+    },
+    {
+      "id": "before_stop",
+      "title": "מעבר לפני תמרור עצור",
+      "say": ["לפני תמרור העצור מעבר חצייה. הסדר: קודם עצירה להולך הרגל לפני המעבר, ואחר כך עצירה בקו העצירה. שתי עצירות — לא אחת."],
+      "instruction": "עצירה להולך רגל לפני המעבר → עצירה בקו העצירה → שמאלה",
+      "navigateTo": { "junctionId": "n22", "via": ["n12"] },
+      "done": { "kind": "passed_junction", "junctionId": "n12", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n12", "radius": 68 }, "do": [{ "kind": "spawn_pedestrian", "crossingId": "c_stop" }, { "kind": "say", "text": "הולך רגל במעבר שלפני העצור — עוצרים לו קודם.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! עוצרים להולך הרגל לפני המעבר.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["STOP_SIGN_NO_STOP", "STOP_SIGN_ROLLING"] }, "do": [{ "kind": "say", "text": "אחרי שהולך הרגל עבר — עצירה מוחלטת בקו העצירה. שתי עצירות נפרדות.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_STOP"] }, "do": [{ "kind": "say", "text": "עצירה נקייה בקו.", "priority": 1 }] }
+      ],
+      "focus": ["PEDESTRIAN_NOT_YIELDED", "STOP_SIGN_NO_STOP", "STOP_LINE_OVERRUN"],
+      "onDone": ["מזרחה ברחוב החצב."]
+    },
+    {
+      "id": "finish",
+      "title": "סיום",
+      "say": ["לפני הצומת הבא — עצירה בצד ימין."],
+      "instruction": "עצירה בצד",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n22", "radius": 60 }, { "kind": "stopped", "seconds": 2 }] },
+      "quiz": ["0023", "0189", "0893", "0516", "1536"],
+      "onDone": ["סיימנו."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 1, "allowCritical": false },
+  "topics": ["pedestrian_crossings", "stop_give_way_signs", "pedestrians"],
+  "debrief": [
+    "ארבעה מעברי חצייה, ארבעה מצבים שונים — אותו כלל: מי שמתכוון לחצות קודם, ועוצרים לפני המעבר.",
+    "הסוד הוא הזיהוי המוקדם: תמרור, פסים, מדרכות — והרגל כבר מחוץ לגז.",
+    "בשיעור הבא: מראות, נקודה מתה והחלפת נתיבים בשדרה."
+  ]
+}

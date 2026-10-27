@@ -1,0 +1,158 @@
+{
+  "id": "L03",
+  "order": 3,
+  "title": "עצור, תן זכות קדימה וימין קודם",
+  "subtitle": "תמרורים 302 ו-301, ותקנה 64 — זכות קדימה לבא מימין",
+  "summary": "סיבוב שעובר בכל סוגי הצמתים של המגרש: תמרור עצור עם עצירה מוחלטת, שני צמתים עם תן זכות קדימה מול תנועה שמגיעה מהצד, דרך ראשית שבה הזכות שלנו, וצומת ללא תמרורים שבו רכב מגיע מימין.",
+  "minutes": 14,
+  "prerequisites": ["L02"],
+  "spawnId": "tg_main_w",
+  "world": "training-ground",
+  "traffic": { "density": 0.2, "pedestrians": 0.2, "seed": 33 },
+  "hour": 11,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "תקנה 64 — מי קודם?",
+      "text": "בצומת **ללא תמרורים** נותנים זכות קדימה לרכב הבא **מימין**. פונה שמאלה נותן זכות קדימה לבא ממול.\n\nעם תמרור ״תן זכות קדימה״ או ״עצור״ — מי שבדרך המתומררת נותן זכות קדימה לכל התנועה בדרך החוצה. בדרך ראשית (309) הזכות של מי שנוסע בה.",
+      "signs": ["301", "302", "309"],
+      "diagram": "right_hand_rule"
+    },
+    {
+      "title": "עצור ≠ תן זכות קדימה",
+      "text": "**302 עצור:** עצירה מוחלטת תמיד, לפני קו העצירה, גם כשהכול פנוי. הגלגלים מפסיקים להסתובב.\n\n**301 תן זכות קדימה:** מאטים, בודקים; עוצרים רק אם צריך. אם פנוי — ממשיכים.\n\nתמרור 139 מזהיר שעצור מגיע בהמשך.",
+      "signs": ["302", "301", "139", "810"],
+      "diagram": "stop_line_order"
+    },
+    {
+      "title": "מה זה ״לתת זכות קדימה״",
+      "text": "לאפשר לאחר להמשיך **בלי לשנות מהירות ובלי לסטות**. אם הוא נאלץ לבלום בגללנו — לא נתנו.\n\nומצד שני: כשהצומת פנוי והזכות שלנו — נוסעים. היסוס מבלבל את כולם.",
+      "signs": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "right_lane_turn",
+      "title": "נתיב ימני ופנייה ימינה ברמזור",
+      "say": [
+        "אנחנו בשדרה, בנתיב השמאלי. בצומת המרומזר נפנה ימינה — אז קודם עוברים לנתיב הימני: מראה, איתות ימינה, מבט לכתף, מעבר.",
+        "ואז הפנייה: צמוד לימין, מבט למעבר החצייה."
+      ],
+      "instruction": "מעבר לנתיב הימני → ימינה ברמזור לרחוב הדקל",
+      "navigateTo": { "junctionId": "n12", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 85 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "violation", "types": ["WRONG_LANE_FOR_TURN"] }, "do": [{ "kind": "say", "text": "פנינו ימינה מהנתיב השמאלי — מתארגנים בנתיב הנכון עוד לפני הצומת.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE"] }, "do": [{ "kind": "say", "text": "החלפת נתיב: איתות, מראה, כתף — ואז עוברים.", "priority": 2 }] }
+      ],
+      "focus": ["WRONG_LANE_FOR_TURN", "NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE", "PEDESTRIAN_NOT_YIELDED"],
+      "onDone": ["אנחנו ברחוב הדקל, דרומה. בהמשך — תמרור עצור."]
+    },
+    {
+      "id": "stop_sign",
+      "title": "תמרור עצור",
+      "say": [
+        "עצור בהמשך הרחוב. מאטים מוקדם. עוצרים כך שחזית הרכב לפני קו העצירה — לא עליו.",
+        "אחרי שעצרנו: שמאלה, ימינה, שוב שמאלה. הרחוב שחוצים הוא חד-סטרי מערב-מזרח, אז התנועה מגיעה משמאל. כשפנוי — שמאלה."
+      ],
+      "instruction": "עצירה מוחלטת לפני הקו → בדיקה → שמאלה",
+      "navigateTo": { "junctionId": "n22", "via": ["n12"] },
+      "done": { "kind": "passed_junction", "junctionId": "n12", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["APPROACHING_STOP_SIGN"] }, "do": [{ "kind": "say", "text": "תמרור עצור: עצירה מוחלטת לפני הקו, גם אם נראה פנוי. אחרי העצירה — מבט שמאלה, ימינה, שוב שמאלה, ויוצאים.", "priority": 1 }, { "kind": "highlight", "target": "stop_line", "seconds": 5 }] },
+        { "when": { "kind": "violation", "types": ["STOP_SIGN_NO_STOP"] }, "do": [{ "kind": "brake", "reason": "אי-עצירה בתמרור עצור" }, { "kind": "say", "text": "בלמתי. לא עצרנו בעצור — בטסט זה כישלון מיידי. עוצרים לגמרי, בכל פעם.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["STOP_SIGN_ROLLING"] }, "do": [{ "kind": "say", "text": "האטנו אבל לא עצרנו. ״עצירה״ זה אפס קמ״ש — שנייה אחת של שקט.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["STOP_LINE_OVERRUN"] }, "do": [{ "kind": "say", "text": "עצרנו מעבר לקו. הקו הוא הגבול — חזית הרכב לפניו.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_STOP"] }, "do": [{ "kind": "say", "text": "עצירה מלאה לפני הקו. מצוין.", "priority": 1 }] }
+      ],
+      "focus": ["STOP_SIGN_NO_STOP", "STOP_SIGN_ROLLING", "STOP_LINE_OVERRUN", "PEDESTRIAN_NOT_YIELDED"],
+      "onDone": ["יפה. רחוב החצב מזרחה, 30 קמ״ש, עד הצומת הבא."]
+    },
+    {
+      "id": "give_way_n22",
+      "title": "תן זכות קדימה — רכב מגיע",
+      "say": ["הצומת הבא: תן זכות קדימה, ופונים שמאלה לרחוב האלון. שימו לב לרכב שמגיע מימין — הוא בדרך החוצה, הוא קודם."],
+      "instruction": "איתות שמאלה → תן זכות קדימה לרכב מימין → שמאלה",
+      "navigateTo": { "junctionId": "n21", "via": ["n22"] },
+      "done": { "kind": "passed_junction", "junctionId": "n22", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n22", "radius": 65 }, "do": [{ "kind": "spawn_vehicle", "where": "from_right", "distance": 55, "speedKmh": 35 }, { "kind": "say", "text": "תן זכות קדימה: לא חייבים לעצור, אבל חייבים להיות מוכנים. רכב מימין — הוא קודם.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה" }, { "kind": "say", "text": "בלמתי — הרכב מימין נאלץ לבלום בגללנו. זו עבירה קריטית.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "נתת לו לעבור ונכנסת אחריו — בדיוק ככה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["HESITATION"] }, "do": [{ "kind": "say", "text": "הוא עבר, הצומת פנוי — נוסעים.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "HESITATION", "NO_INDICATOR_TURN"],
+      "onDone": ["יפה. צפונה ברחוב האלון עד השדרה."]
+    },
+    {
+      "id": "give_way_n21",
+      "title": "תן זכות קדימה בכניסה לשדרה",
+      "say": ["בכניסה לשדרה הראשית — תן זכות קדימה, ופונים שמאלה. תנועה משני הכיוונים: ממתינים לפער שמספיק לפנייה שלמה, בלי שאף אחד יאט בגללנו."],
+      "instruction": "איתות שמאלה → פער בטוח משני הכיוונים → שמאלה לשדרה",
+      "navigateTo": { "junctionId": "n01", "via": ["n21", "n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n21", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n21", "radius": 75 }, "do": [{ "kind": "spawn_vehicle", "where": "from_left", "distance": 75, "speedKmh": 45 }, { "kind": "spawn_vehicle", "where": "from_right", "distance": 60, "speedKmh": 45 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בשדרה" }, { "kind": "say", "text": "בלמתי. בשדרה הרכבים מהירים — הפער צריך להיות גדול יותר ממה שנראה.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "סבלנות נכונה — ופנייה נקייה.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "CUT_CORNER", "NO_INDICATOR_TURN"],
+      "onDone": ["אנחנו בשדרה מערבה. כאן הזכות שלנו — אבל ממשיכים להסתכל."]
+    },
+    {
+      "id": "priority_road",
+      "title": "דרך ראשית — הזכות שלנו",
+      "say": [
+        "בשדרה אנחנו בדרך הראשית: הרחובות הצדדיים עם תן זכות קדימה. ברמזור ממשיכים ישר, ובצומת שאחריו פונים ימינה לרחוב התמר.",
+        "זכות קדימה לא פוטרת מלהסתכל: נהגים טועים."
+      ],
+      "instruction": "ישר ברמזור → ימינה לרחוב התמר",
+      "done": { "kind": "passed_junction", "junctionId": "n01", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 85 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "violation", "types": ["HESITATION"] }, "do": [{ "kind": "say", "text": "כאן הזכות שלנו והצומת פנוי — ממשיכים בביטחון.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "גם כשהזכות שלנו — מאותתים לפני הפנייה.", "priority": 2 }] }
+      ],
+      "focus": ["HESITATION", "NO_INDICATOR_TURN", "WIDE_TURN"],
+      "onDone": ["צפונה ברחוב התמר, ואחרי העיקול — רחוב הברוש."]
+    },
+    {
+      "id": "right_hand_rule",
+      "title": "ימין קודם",
+      "say": [
+        "רחוב הברוש: בהמשך מעבר חצייה, ואחריו צומת **בלי שום תמרור**. שם חל הכלל הבסיסי — זכות קדימה לבא מימין.",
+        "מתקרבים לאט, מסתכלים ימינה לרחוב הדקל. אם מגיע משם רכב — הוא קודם."
+      ],
+      "instruction": "מעבר חצייה → צומת ללא תמרורים: זכות קדימה לבא מימין → ישר",
+      "navigateTo": { "junctionId": "n20", "via": ["n00", "n10"] },
+      "done": { "kind": "passed_junction", "junctionId": "n10", "turn": "straight" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["APPROACHING_CROSSING"] }, "do": [{ "kind": "say", "text": "מעבר חצייה — רגל מהגז, מבט למדרכות.", "priority": 1 }] },
+        { "when": { "kind": "reach", "junctionId": "n10", "radius": 80 }, "do": [{ "kind": "spawn_vehicle", "where": "from_right", "distance": 50, "speedKmh": 30 }, { "kind": "say", "text": "צומת בלי תמרורים: מי שבא מימין — קודם. רואים אותו? נותנים לו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה לבא מימין" }, { "kind": "say", "text": "בלמתי. תקנה 64: בלי תמרור, הבא מימין קודם — גם ברחוב שקט.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "ימין קודם — זיהית ונתת. מצוין.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "HESITATION", "PEDESTRIAN_NOT_YIELDED"],
+      "onDone": ["זה הכלל שהכי הרבה נהגים שוכחים — ואתם לא."]
+    },
+    {
+      "id": "finish",
+      "title": "חניה ברחוב האלון",
+      "say": ["ממשיכים מזרחה, אחרי העיקול דרומה לרחוב האלון, ושם חונים בצד ימין: איתות, מראה, קרוב למדרכה, P."],
+      "instruction": "חניה בצד ימין ברחוב האלון",
+      "navigateTo": { "junctionId": "n21", "via": ["n20"] },
+      "done": { "kind": "parked", "maxKerbDistance": 0.5, "maxAngleDeg": 8, "bayId": "p3" },
+      "focus": ["PARKING_TOO_FAR", "PARKING_ANGLE"],
+      "quiz": ["1741", "0027", "0175", "0535", "0443"],
+      "onDone": ["חנינו. סיכום קצר."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["right_of_way_64", "stop_give_way_signs", "junction_discipline", "priority"],
+  "debrief": [
+    "עברנו בכל סוגי הצמתים: עצור, תן זכות קדימה, דרך ראשית וימין קודם.",
+    "הכלל הפשוט: לדעת לפני הצומת מי קודם — ואז לבצע בלי היסוס.",
+    "בשיעור הבא: רמזורים — אדום, אדום-צהוב, ירוק, ירוק מהבהב וצהוב."
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "id": "L05",
+  "order": 5,
+  "title": "כיכרות",
+  "subtitle": "זכות קדימה לרכב בכיכר, בחירת יציאה, איתות — ופרסה דרך הכיכר",
+  "summary": "ארבעה מעברים בכיכר האילנות: יציאה ראשונה (ימינה), שנייה (ישר) ושלישית (שמאלה), ולבסוף שימוש בכיכר כדי להסתובב — בכל פעם עם רכב שכבר נמצא בכיכר.",
+  "minutes": 12,
+  "prerequisites": ["L04"],
+  "spawnId": "tg_roundabout",
+  "world": "training-ground",
+  "traffic": { "density": 0.2, "pedestrians": 0.1, "seed": 55 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "מי קודם בכיכר",
+      "text": "תמרור 303: **תן זכות קדימה לתנועה בכיכר**, ועבור אותה מצדה הימני (נגד כיוון השעון).\n\nמתקרבים לאט, מסתכלים **שמאלה** — משם מגיעים מי שקודמים לנו. אם פנוי — נכנסים בלי לעצור; עצירה מיותרת היא היסוס.",
+      "signs": ["303", "121"]
+    },
+    {
+      "title": "נתיב ואיתות",
+      "text": "בכיכר דו-נתיבית: יציאה ראשונה ו״ישר״ — מהנתיב הימני; יציאות רחוקות ופרסה — מהשמאלי. כאן הכיכר חד-נתיבית.\n\n**איתות ימינה** מיד אחרי שעוברים את היציאה שלפני שלנו. ליציאה שאחרי ״ישר״ נכנסים עם איתות שמאלה.",
+      "signs": [],
+      "diagram": "roundabout_lanes"
+    },
+    {
+      "title": "הכיכר כפתרון",
+      "text": "הכיכר היא הדרך הבטוחה ביותר להסתובב: עוברים את כל היציאות וחוזרים לכיוון שבאנו ממנו. הבוחן עשוי לבקש זאת במקום פניית פרסה.\n\nהולכי רגל במעברי החצייה שביציאות — קודמים.",
+      "signs": ["306", "811"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "exit1",
+      "title": "יציאה ראשונה — ימינה",
+      "say": ["לפנינו כיכר. נצא ביציאה הראשונה, ימינה, לדרך הדרום. מאטים, מסתכלים שמאלה, נותנים זכות קדימה למי שבכיכר, ואיתות ימינה כבר בכניסה."],
+      "instruction": "זכות קדימה לרכב בכיכר → יציאה ראשונה (ימינה) עם איתות",
+      "navigateTo": { "junctionId": "rb_s_end" },
+      "done": { "kind": "passed_junction", "junctionId": "rb_s", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "rb_w", "radius": 48 }, "do": [{ "kind": "spawn_vehicle", "where": "inside_roundabout", "distance": 20, "speedKmh": 25 }, { "kind": "say", "text": "רכב בכיכר, משמאל — הוא קודם. ממתינים שיעבור ונכנסים אחריו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["ROUNDABOUT_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בכיכר" }, { "kind": "say", "text": "בלמתי. מי שבכיכר — קודם. תמיד מבט שמאלה לפני הכניסה.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "נתת לרכב בכיכר לעבור. יפה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "איתות ימינה ביציאה מהכיכר — כך הממתינים בכניסות יודעים שאפשר להיכנס.", "priority": 1 }] }
+      ],
+      "focus": ["ROUNDABOUT_NO_YIELD", "NO_INDICATOR_TURN", "ROUNDABOUT_WRONG_LANE", "HESITATION"],
+      "onDone": ["יצאנו דרומה. בסוף הדרך נסתובב ונחזור."]
+    },
+    {
+      "id": "uturn1",
+      "title": "פניית פרסה בסוף הדרך",
+      "say": ["סוף הרחוב. פניית פרסה: איתות שמאלה, מהירות הליכה, מבט לשני הכיוונים, ובלי לעלות על המדרכה."],
+      "instruction": "פניית פרסה בסוף הדרך",
+      "done": { "kind": "passed_junction", "junctionId": "rb_s_end", "turn": "uturn" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["KERB_MOUNT", "KERB_STRIKE"] }, "do": [{ "kind": "say", "text": "נגענו במדרכה. אם הרחוב צר — פנייה בשלוש נקודות עם רוורס קצר.", "priority": 1 }] }
+      ],
+      "focus": ["KERB_MOUNT", "NO_INDICATOR_TURN"],
+      "onDone": ["חוזרים לכיכר מהדרום."]
+    },
+    {
+      "id": "exit2",
+      "title": "יציאה שנייה — ישר",
+      "say": ["הפעם היציאה השנייה — ״ישר״, לדרך הצפון. נכנסים בלי איתות, ומאותתים ימינה מיד אחרי שעוברים את היציאה הראשונה."],
+      "instruction": "זכות קדימה → יציאה שנייה (ישר) → איתות ימינה אחרי היציאה הראשונה",
+      "navigateTo": { "junctionId": "rb_n_end" },
+      "done": { "kind": "passed_junction", "junctionId": "rb_n", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "rb_s", "radius": 48 }, "do": [{ "kind": "spawn_vehicle", "where": "inside_roundabout", "distance": 18, "speedKmh": 25 }, { "kind": "say", "text": "שוב רכב בכיכר. מבט שמאלה — ונכנסים אחריו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["ROUNDABOUT_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בכיכר" }, { "kind": "say", "text": "בלמתי. הכניסה לכיכר רק כשמי שבפנים עבר.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "האיתות ימינה ביציאה חסר. אחרי היציאה הראשונה — מאותתים.", "priority": 1 }] }
+      ],
+      "focus": ["ROUNDABOUT_NO_YIELD", "NO_INDICATOR_TURN", "HESITATION"],
+      "onDone": ["צפונה. עוד פרסה בסוף הדרך."]
+    },
+    {
+      "id": "uturn2",
+      "title": "פניית פרסה וחזרה",
+      "say": ["פרסה בסוף הדרך, וחוזרים לכיכר מהצפון."],
+      "instruction": "פניית פרסה בסוף הדרך",
+      "done": { "kind": "passed_junction", "junctionId": "rb_n_end", "turn": "uturn" },
+      "focus": ["KERB_MOUNT", "NO_INDICATOR_TURN"],
+      "onDone": ["ועכשיו היציאה השלישית."]
+    },
+    {
+      "id": "exit3",
+      "title": "יציאה שלישית — שמאלה",
+      "say": ["היציאה השלישית, לדרך המזרח — זו ״פנייה שמאלה״ דרך הכיכר. נכנסים עם איתות שמאלה, ואחרי שעוברים את היציאה השנייה מחליפים לאיתות ימינה."],
+      "instruction": "איתות שמאלה בכניסה → יציאה שלישית → איתות ימינה אחרי היציאה השנייה",
+      "navigateTo": { "junctionId": "rb_e_end" },
+      "done": { "kind": "passed_junction", "junctionId": "rb_e", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "reach", "junctionId": "rb_n", "radius": 48 }, "do": [{ "kind": "spawn_vehicle", "where": "inside_roundabout", "distance": 22, "speedKmh": 25 }, { "kind": "say", "text": "רכב בכיכר — הוא קודם. ואנחנו: איתות שמאלה בכניסה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["ROUNDABOUT_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בכיכר" }, { "kind": "say", "text": "בלמתי. שוב: מי שבכיכר קודם.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["ROUNDABOUT_WRONG_LANE"] }, "do": [{ "kind": "say", "text": "ליציאה הרחוקה בוחרים את הנתיב השמאלי לפני הכניסה.", "priority": 1 }] }
+      ],
+      "focus": ["ROUNDABOUT_NO_YIELD", "NO_INDICATOR_TURN", "ROUNDABOUT_WRONG_LANE"],
+      "onDone": ["מזרחה. ועכשיו נראה איך הכיכר מחזירה אותנו הביתה."]
+    },
+    {
+      "id": "roundabout_uturn",
+      "title": "פרסה דרך הכיכר",
+      "say": ["פרסה בסוף הדרך, ואז חוזרים לכיכר ועוברים בה את כל היציאות עד היציאה מערבה — לשדרות הראשיים. זו הדרך הבטוחה להסתובב במקום פרסה בכביש."],
+      "instruction": "פרסה בסוף הדרך → דרך הכיכר → יציאה מערבה לשדרה",
+      "navigateTo": { "junctionId": "n21" },
+      "done": { "kind": "passed_junction", "junctionId": "rb_w", "turn": "right" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN"] }, "do": [{ "kind": "say", "text": "איתות ימינה לפני היציאה.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["ROUNDABOUT_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה בכיכר" }, { "kind": "say", "text": "בלמתי. זכות קדימה למי שבכיכר.", "priority": 3 }] }
+      ],
+      "focus": ["ROUNDABOUT_NO_YIELD", "NO_INDICATOR_TURN"],
+      "onDone": ["יצאנו מערבה. ככה מסתובבים בלי פרסה."]
+    },
+    {
+      "id": "finish",
+      "title": "סיום",
+      "say": ["לפני הצומת עם השדרה — עצירה בצד ימין."],
+      "instruction": "עצירה בצד לפני הצומת",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n21", "radius": 70 }, { "kind": "stopped", "seconds": 2 }] },
+      "quiz": ["0551", "0430", "0387", "0553"],
+      "onDone": ["סיימנו את שיעור הכיכרות."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 1, "allowCritical": false },
+  "topics": ["roundabouts", "signalling", "roundabout", "priority"],
+  "debrief": [
+    "ארבעה מעברים בכיכר: ימינה, ישר, שמאלה ופרסה. הכלל אחד — מי שבכיכר קודם.",
+    "האיתות ימינה ביציאה הוא מה שמבדיל נהג מנוסה ממתחיל: הוא משחרר את הממתינים בכניסות.",
+    "בשיעור הבא: מעברי חצייה והולכי רגל."
+  ]
+}

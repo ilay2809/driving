@@ -1,0 +1,136 @@
+{
+  "id": "L07",
+  "order": 7,
+  "title": "מראות, נקודה מתה והחלפת נתיבים",
+  "subtitle": "מראה–איתות–כתף בשדרה דו-נתיבית, פנייה שמאלה מול תנועה ויציאה מחניה",
+  "summary": "בשדרה 2+2 מתרגלים החלפת נתיב לימין ולשמאל עם בדיקת הנקודה המתה, פנייה שמאלה בירוק מלא מול רכב ממול, עצירה בצד ויציאה מחדש לתנועה — כל תמרון מתחיל במראות.",
+  "minutes": 12,
+  "prerequisites": ["L06"],
+  "spawnId": "tg_main_w",
+  "world": "training-ground",
+  "traffic": { "density": 0.4, "pedestrians": 0.2, "seed": 77 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "הנקודה המתה",
+      "text": "גם מראות מכוונות היטב משאירות **שטח מת** בצדי הרכב — בדיוק במקום שבו נמצא רכב שעוקף אותנו או רוכב אופניים.\n\nהפתרון: מבט מהיר **מעבר לכתף** לכיוון התמרון, אחרי המראות ולפני שמזיזים את ההגה.",
+      "signs": [],
+      "diagram": "mirrors_blindspot"
+    },
+    {
+      "title": "סדר החלפת נתיב",
+      "text": "1. מראה פנימית\n2. מראת הצד לכיוון המעבר\n3. **איתות**\n4. מבט לכתף\n5. מעבר הדרגתי — נתיב אחד בכל פעם\n6. ביטול איתות\n\nלא בתוך צומת, לא על מעבר חצייה, ולא על קו רצוף.",
+      "signs": ["801", "803", "813"]
+    },
+    {
+      "title": "שמאלה בירוק מלא",
+      "text": "בירוק ללא חץ, הפונה שמאלה נותן זכות קדימה לבא ממול. מתקדמים למרכז הצומת, **גלגלים ישרים**, וממתינים לפער. אם הופיע צהוב בזמן ההמתנה — משלימים ומפנים את הצומת.",
+      "signs": ["703", "704"],
+      "diagram": "left_turn_yield"
+    }
+  ],
+  "steps": [
+    {
+      "id": "mirror_check",
+      "title": "בדיקת מראות",
+      "say": ["לפני שנזוז — סיבוב מראות: פנימית, שמאל, ימין. בשיעור הזה נעשה את זה לפני כל תמרון."],
+      "instruction": "מבט במראה הפנימית ובשתי מראות הצד (או ׳המשך׳)",
+      "done": {
+        "kind": "any",
+        "of": [
+          { "kind": "all", "of": [{ "kind": "glanced", "target": "rear_mirror", "withinSeconds": 60 }, { "kind": "glanced", "target": "left_mirror", "withinSeconds": 60 }, { "kind": "glanced", "target": "right_mirror", "withinSeconds": 60 }] },
+          { "kind": "acknowledged" }
+        ]
+      },
+      "triggers": [{ "when": { "kind": "elapsed", "seconds": 20 }, "do": [{ "kind": "hint", "text": "מקשי המבט: מראה פנימית, שמאל, ימין", "icon": "mirror", "seconds": 6 }] }],
+      "onDone": ["יוצאים לדרך בנתיב השמאלי."]
+    },
+    {
+      "id": "lane_right",
+      "title": "מעבר לנתיב הימני",
+      "say": ["רכב מאחורינו בנתיב הימני. עוברים ימינה רק אחרי: מראה פנימית, מראת ימין, איתות ימינה, מבט לכתף ימין — ואם פנוי, מעבר עדין."],
+      "instruction": "מראה → איתות ימינה → כתף ימין → מעבר לנתיב הימני",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "pos": [-40, 4.95], "radius": 2.2 }, { "kind": "glanced", "target": "right_shoulder", "withinSeconds": 15 }] },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "spawn_vehicle", "where": "behind", "distance": 35, "speedKmh": 45 }] },
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "עברנו בלי מבט לכתף — שם היה יכול להיות הרכב שמאחור.", "priority": 2 }, { "kind": "highlight", "target": "mirror_right", "seconds": 4 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_LANE_CHANGE"] }, "do": [{ "kind": "say", "text": "איתות לפני המעבר — גם כשנדמה שאין אף אחד.", "priority": 2 }] },
+        { "when": { "kind": "elapsed", "seconds": 35 }, "do": [{ "kind": "hint", "text": "המעבר מושלם רק עם מבט לכתף ימין בתוך 15 שניות לפני", "icon": "shoulder", "seconds": 6 }] }
+      ],
+      "focus": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE", "NO_MIRROR_CHECK", "LANE_DEPARTURE"],
+      "onDone": ["בנתיב הימני. ביטול איתות."]
+    },
+    {
+      "id": "lane_left",
+      "title": "חזרה לנתיב השמאלי",
+      "say": ["בצומת נפנה שמאלה — לכן חוזרים לנתיב השמאלי: מראה, איתות שמאלה, כתף שמאל, מעבר."],
+      "instruction": "מראה → איתות שמאלה → כתף שמאל → מעבר לנתיב השמאלי",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "pos": [-22, 1.65], "radius": 2.2 }, { "kind": "glanced", "target": "left_shoulder", "withinSeconds": 15 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "כתף שמאל לפני המעבר שמאלה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_INDICATOR_LANE_CHANGE"] }, "do": [{ "kind": "say", "text": "איתות שמאלה לפני המעבר.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["SOLID_LINE_CROSSED"] }, "do": [{ "kind": "say", "text": "הקו כאן רצוף — החלפת נתיב רק במקווקו.", "priority": 2 }] }
+      ],
+      "focus": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE", "SOLID_LINE_CROSSED"],
+      "onDone": ["בנתיב השמאלי, עם איתות שמאלה לפנייה."]
+    },
+    {
+      "id": "left_vs_oncoming",
+      "title": "שמאלה מול תנועה",
+      "say": ["הרמזור ירוק מלא, ורכב מגיע ממול. נכנסים למרכז הצומת, גלגלים ישרים, ומחכים שיעבור. רק אז פונים — לנתיב השמאלי של רחוב הדקל."],
+      "instruction": "ירוק → מרכז הצומת, גלגלים ישרים → זכות קדימה לבא ממול → שמאלה",
+      "navigateTo": { "junctionId": "n10", "via": ["n11"] },
+      "done": { "kind": "passed_junction", "junctionId": "n11", "turn": "left" },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] },
+        { "when": { "kind": "reach", "junctionId": "n11", "radius": 62 }, "do": [{ "kind": "spawn_vehicle", "where": "oncoming", "distance": 85, "speedKmh": 40 }, { "kind": "say", "text": "רכב ממול — הוא קודם. ממתינים במרכז הצומת עם גלגלים ישרים.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["LEFT_TURN_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "פנייה שמאלה מול תנועה" }, { "kind": "say", "text": "בלמתי! הרכב ממול היה קודם. ממתינים לפער.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["CUT_CORNER"] }, "do": [{ "kind": "say", "text": "חיתוך פינה — עוברים את מרכז הצומת.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_YIELD"] }, "do": [{ "kind": "say", "text": "המתנה נכונה — ופנייה נקייה.", "priority": 1 }] }
+      ],
+      "focus": ["LEFT_TURN_NO_YIELD", "CUT_CORNER", "WRONG_LANE_FOR_TURN"],
+      "onDone": ["ברחוב הדקל, צפונה. עכשיו עוצרים בצד."]
+    },
+    {
+      "id": "pull_in",
+      "title": "עצירה בצד",
+      "say": ["מראה, איתות ימינה, האטה, עצירה קרוב למדרכה, P."],
+      "instruction": "עצירה בצד ימין (P)",
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 25 }, { "kind": "parked", "maxKerbDistance": 0.7, "maxAngleDeg": 10 }] },
+      "triggers": [{ "when": { "kind": "violation", "types": ["NO_INDICATOR_TURN", "NO_MIRROR_CHECK"] }, "do": [{ "kind": "say", "text": "גם עצירה בצד היא תמרון: מראה ואיתות ימינה לפני.", "priority": 1 }] }],
+      "focus": ["NO_MIRROR_CHECK", "PARKING_TOO_FAR"],
+      "onDone": ["עצורים. ועכשיו החלק החשוב — היציאה."]
+    },
+    {
+      "id": "pull_out",
+      "title": "יציאה מהחניה",
+      "say": ["רכב מתקרב מאחור. מראה פנימית, מראת שמאל, איתות שמאלה, כתף שמאל — ויוצאים רק אחרי שעבר."],
+      "instruction": "מראות → איתות שמאלה → כתף שמאל → יציאה כשפנוי",
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 15 }, { "kind": "glanced", "target": "left_shoulder", "withinSeconds": 20 }] },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "spawn_vehicle", "where": "behind", "distance": 70, "speedKmh": 40 }] },
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "יצאנו בלי כתף. ביציאה מחניה הנקודה המתה היא הסכנה העיקרית.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "יציאה מול רכב מתקרב" }, { "kind": "say", "text": "בלמתי. מי שבכביש קודם — יוצאים אחריו.", "priority": 3 }] }
+      ],
+      "focus": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE", "FAILED_TO_YIELD"],
+      "onDone": ["יציאה מסודרת. ממשיכים עד הצומת."]
+    },
+    {
+      "id": "finish",
+      "title": "סיום",
+      "say": ["לפני צומת הברוש — עצירה בצד."],
+      "instruction": "עצירה בצד לפני הצומת",
+      "done": { "kind": "all", "of": [{ "kind": "reach", "junctionId": "n10", "radius": 45 }, { "kind": "stopped", "seconds": 2 }] },
+      "quiz": ["0800", "0860", "0861", "0762", "0761"],
+      "onDone": ["סיימנו."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["seating_mirrors", "lanes_position", "left_turn_yield", "pulling_out", "mirrors", "lanes"],
+  "debrief": [
+    "כל תמרון היום התחיל באותו משפט: מראה, איתות, כתף. זה ההרגל שהבוחן מחפש בתנועת הראש שלכם.",
+    "הפנייה שמאלה מול תנועה היא מבחן סבלנות — מרכז הצומת, גלגלים ישרים, פער ברור.",
+    "בשיעור הבא: מהירות, מרחק עקיבה ואזור 30."
+  ]
+}

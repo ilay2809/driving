@@ -1,0 +1,103 @@
+{
+  "id": "L11",
+  "order": 11,
+  "title": "דרך ראשית, נת״צ ושילוב",
+  "subtitle": "צפון תל אביב: איינשטיין, דרך נמיר ורוקח — נתיבים, נת״צ ונתיבי פנייה",
+  "summary": "הנסיעה הראשונה בעולם האמיתי: מהאוניברסיטה לאיינשטיין, השתלבות בדרך נמיר לצד נת״צ, פנייה שמאלה מנתיב פנייה בצומת גדול, וחזרה דרך רחובות השכונה.",
+  "minutes": 18,
+  "prerequisites": ["L10"],
+  "spawnId": "tlv_university",
+  "world": "north-tlv",
+  "traffic": { "density": 0.5, "pedestrians": 0.4, "seed": 111 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "דרך ראשית",
+      "text": "בשדרות רחבות (איינשטיין, רוקח, נמיר): נוסעים בנתיב הימני אלא אם עוקפים או פונים שמאלה; **50 קמ״ש** אלא אם סומן אחרת; מרחק של שתי שניות; החלפת נתיב — מראה, איתות, כתף, נתיב אחד בכל פעם.",
+      "signs": ["309", "426", "613"]
+    },
+    {
+      "title": "נת״צ",
+      "text": "הנתיב הצהוב (501, סימון 503/515) שמור לאוטובוסים ולמוניות. **רכב פרטי לא נוסע בו** — חוצים אותו רק כדי לפנות ימינה בצומת הקרוב, במקום שבו הקו מקווקו.\n\nתמרור 504: רחוב חד-סטרי עם נת״צ נגדי — אוטובוסים ממול!",
+      "signs": ["501", "503", "515", "504"]
+    },
+    {
+      "title": "נתיבי פנייה בצומת גדול",
+      "text": "תמרור 613 והחצים על הכביש (813) קובעים מאיזה נתיב פונים. מתארגנים **מוקדם**, לא בצומת. בפנייה שמאלה בירוק מלא — זכות קדימה לבא ממול; ולא נכנסים לצומת אם לא נוכל לצאת ממנו.",
+      "signs": ["813", "704", "420"],
+      "diagram": "left_turn_yield"
+    }
+  ],
+  "steps": [
+    {
+      "id": "main_road",
+      "title": "דרך ראשית",
+      "say": ["ברוכים הבאים לצפון תל אביב. נוסעים לכיוון רחוב איינשטיין לפי ההנחיות — נתיב ימני, חמישים, שתי שניות."],
+      "instruction": "סעו לפי הניווט לרחוב איינשטיין",
+      "navigateTo": { "spawnId": "tlv_einstein" },
+      "done": { "kind": "reach", "spawnId": "tlv_einstein", "radius": 35 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["BUS_LANE"] }, "do": [{ "kind": "say", "text": "הנתיב הצהוב — נת״צ. יוצאים ממנו לנתיב הכללי, עם איתות.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MAJOR", "SPEEDING_CRITICAL"] }, "do": [{ "kind": "say", "text": "מהר מדי לדרך עירונית — חמישים זה הגג.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["TAILGATING"] }, "do": [{ "kind": "say", "text": "שתי שניות מהרכב שלפנינו.", "priority": 1 }] }
+      ],
+      "focus": ["LANE_DEPARTURE", "SPEEDING_MINOR", "BUS_LANE", "TAILGATING"],
+      "onDone": ["איינשטיין. ממשיכים לדרך נמיר."]
+    },
+    {
+      "id": "namir_merge",
+      "title": "השתלבות בדרך נמיר",
+      "say": ["דרך נמיר: שדרה רחבה עם נת״צ בימין. משתלבים לנתיב הכללי — מראה, איתות, כתף — ולא לנתיב הצהוב. הקו הרצוף לצדו לא נחצה."],
+      "instruction": "השתלבות לנתיב הכללי; לא בנת״צ",
+      "navigateTo": { "spawnId": "tlv_namir_rokach" },
+      "done": { "kind": "reach", "spawnId": "tlv_namir_rokach", "radius": 40 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["BUS_LANE", "NO_ENTRY"] }, "do": [{ "kind": "say", "text": "נת״צ! רק אוטובוסים ומוניות. לעבור לנתיב הכללי כשבטוח.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE"] }, "do": [{ "kind": "say", "text": "החלפת נתיב בדרך מהירה יחסית — איתות וכתף הם חובה.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["SOLID_LINE_CROSSED"] }, "do": [{ "kind": "say", "text": "חצינו קו רצוף. מחליפים נתיב רק במקווקו.", "priority": 2 }] }
+      ],
+      "focus": ["NO_INDICATOR_LANE_CHANGE", "NO_SHOULDER_CHECK", "BUS_LANE", "SOLID_LINE_CROSSED"],
+      "onDone": ["נמיר/רוקח. לפנינו צומת גדול."]
+    },
+    {
+      "id": "big_junction",
+      "title": "נתיב פנייה בצומת גדול",
+      "say": ["בצומת הגדול פונים לפי הניווט — מתארגנים בנתיב הפנייה המסומן כבר מרחוק. אם זו פנייה שמאלה בירוק מלא: למרכז הצומת, גלגלים ישרים, זכות קדימה לבא ממול."],
+      "instruction": "נתיב פנייה נכון מראש → פנייה לפי הניווט",
+      "navigateTo": { "spawnId": "tlv_kochav" },
+      "done": { "kind": "reach", "spawnId": "tlv_kochav", "radius": 40 },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["WRONG_LANE_FOR_TURN"] }, "do": [{ "kind": "say", "text": "פנינו מנתיב לא מתאים. תמרור 613 מראה את הנתיבים מרחוק — מתארגנים לפניו.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["LEFT_TURN_NO_YIELD"] }, "do": [{ "kind": "brake", "reason": "פנייה שמאלה מול תנועה" }, { "kind": "say", "text": "בלמתי! בשמאלה — זכות קדימה לבא ממול.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["BLOCKING_JUNCTION"] }, "do": [{ "kind": "say", "text": "נתקענו בתוך הצומת. נכנסים רק אם אפשר לצאת.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["AMBER_RUN", "RED_LIGHT"] }, "do": [{ "kind": "say", "text": "צהוב פירושו לעצור כשאפשר. בצומת גדול יש זמן — לא מאיצים.", "priority": 2 }] }
+      ],
+      "focus": ["WRONG_LANE_FOR_TURN", "LEFT_TURN_NO_YIELD", "BLOCKING_JUNCTION", "AMBER_RUN"],
+      "onDone": ["כוכב הצפון. חוזרים דרך השכונה."]
+    },
+    {
+      "id": "neighbourhood",
+      "title": "חזרה בשכונה",
+      "say": ["רחובות שכונתיים: צמתים בלי תמרורים — ימין קודם; מעברי חצייה; רכבים חונים משני הצדדים. מהירות נמוכה, סבלנות. בסוף — עצירה בצד."],
+      "instruction": "סעו לפי הניווט; עצירה בצד ביעד",
+      "navigateTo": { "spawnId": "tlv_lamed" },
+      "done": { "kind": "all", "of": [{ "kind": "reach", "spawnId": "tlv_lamed", "radius": 40 }, { "kind": "stopped", "seconds": 2 }] },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["FAILED_TO_YIELD"] }, "do": [{ "kind": "brake", "reason": "אי-מתן זכות קדימה" }, { "kind": "say", "text": "בלמתי. בצומת שכונתי בלי תמרור — הבא מימין קודם.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["PEDESTRIAN_NOT_YIELDED"] }, "do": [{ "kind": "brake", "reason": "הולך רגל במעבר" }, { "kind": "say", "text": "בלמתי! הולך רגל במעבר.", "priority": 3 }] },
+        { "when": { "kind": "violation", "types": ["SPEEDING_MINOR"] }, "do": [{ "kind": "say", "text": "ברחוב שכונתי עם רכבים חונים — פחות מהמותר.", "priority": 1 }] }
+      ],
+      "focus": ["FAILED_TO_YIELD", "PEDESTRIAN_NOT_YIELDED", "SPEEDING_MINOR", "HESITATION"],
+      "quiz": ["1210", "0755", "0126", "1573", "0768"],
+      "onDone": ["הגענו."]
+    }
+  ],
+  "pass": { "maxMinor": 6, "maxMajor": 2, "allowCritical": false },
+  "topics": ["lanes_position", "bus_lanes", "left_turn_yield", "overtaking", "lanes", "bus_lane"],
+  "debrief": [
+    "הנסיעה הראשונה בעיר האמיתית: נתיבים, נת״צ, צומת גדול ורחובות שכונה.",
+    "ההבדל מהמגרש הוא הקצב — ולכן ההתארגנות המוקדמת (נתיב, איתות, מהירות) חשובה פי כמה.",
+    "בשיעור הבא נוסעים בלילה ובגשם."
+  ]
+}

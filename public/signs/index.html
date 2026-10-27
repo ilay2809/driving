@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>קטלוג התמרורים — סימולטור נהיגה</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; padding: 24px; background: #f3f4f6; color: #111; font-family: Rubik, Arial, Helvetica, sans-serif; }
+      h1 { margin: 0 0 4px; font-size: 24px; }
+      p.note { margin: 0 0 20px; color: #555; font-size: 14px; }
+      h2 { font-size: 18px; margin: 28px 0 10px; border-bottom: 2px solid #d1d5db; padding-bottom: 4px; }
+      h2 small { color: #6b7280; font-weight: 400; font-size: 14px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .card { margin: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; text-align: center; }
+      .card img { display: block; margin: 0 auto 6px; width: 120px; height: 120px; }
+      .card figcaption { font-size: 12px; line-height: 1.3; }
+      .card b { display: inline-block; background: #111; color: #fff; border-radius: 4px; padding: 0 6px; margin-inline-end: 4px; font-family: Arial, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <h1>קטלוג התמרורים של הסימולטור</h1>
+    <p class="note">119 תמרורים, מצוירים מחדש לפי לוח התמרורים הרשמי (הודעת התעבורה (קביעת תמרורים), התשע״א-2010, נוסח משולב 2020). נוצר על ידי <code>pnpm content:signs</code>.</p>
+    <section>
+      <h2>תמרורי אזהרה והתראה (1xx) <small>20</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="102">
+        <img src="./102.svg" alt="עקומה חדה ימינה" width="120" height="120" loading="lazy" />
+        <figcaption><b>102</b> עקומה חדה ימינה</figcaption>
+      </figure>
+      <figure class="card" data-code="103">
+        <img src="./103.svg" alt="עקומה חדה שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>103</b> עקומה חדה שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="109">
+        <img src="./109.svg" alt="הכביש הולך וצר" width="120" height="120" loading="lazy" />
+        <figcaption><b>109</b> הכביש הולך וצר</figcaption>
+      </figure>
+      <figure class="card" data-code="110">
+        <img src="./110.svg" alt="הכביש הולך וצר מצד ימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>110</b> הכביש הולך וצר מצד ימין</figcaption>
+      </figure>
+      <figure class="card" data-code="111">
+        <img src="./111.svg" alt="הכביש הולך וצר מצד שמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>111</b> הכביש הולך וצר מצד שמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="114">
+        <img src="./114.svg" alt="צומת הצטלבות" width="120" height="120" loading="lazy" />
+        <figcaption><b>114</b> צומת הצטלבות</figcaption>
+      </figure>
+      <figure class="card" data-code="115">
+        <img src="./115.svg" alt="צומת קמץ — דרך מימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>115</b> צומת קמץ — דרך מימין</figcaption>
+      </figure>
+      <figure class="card" data-code="116">
+        <img src="./116.svg" alt="צומת קמץ — דרך משמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>116</b> צומת קמץ — דרך משמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="117">
+        <img src="./117.svg" alt="צומת קמץ (T)" width="120" height="120" loading="lazy" />
+        <figcaption><b>117</b> צומת קמץ (T)</figcaption>
+      </figure>
+      <figure class="card" data-code="121">
+        <img src="./121.svg" alt="מעגל תנועה לפניך" width="120" height="120" loading="lazy" />
+        <figcaption><b>121</b> מעגל תנועה לפניך</figcaption>
+      </figure>
+      <figure class="card" data-code="122">
+        <img src="./122.svg" alt="רמזור לפניך" width="120" height="120" loading="lazy" />
+        <figcaption><b>122</b> רמזור לפניך</figcaption>
+      </figure>
+      <figure class="card" data-code="135">
+        <img src="./135.svg" alt="מעבר חצייה בקרבת מקום" width="120" height="120" loading="lazy" />
+        <figcaption><b>135</b> מעבר חצייה בקרבת מקום</figcaption>
+      </figure>
+      <figure class="card" data-code="136">
+        <img src="./136.svg" alt="הולכי רגל בקרבת מקום" width="120" height="120" loading="lazy" />
+        <figcaption><b>136</b> הולכי רגל בקרבת מקום</figcaption>
+      </figure>
+      <figure class="card" data-code="137">
+        <img src="./137.svg" alt="תנועת אופניים בקרבת מקום" width="120" height="120" loading="lazy" />
+        <figcaption><b>137</b> תנועת אופניים בקרבת מקום</figcaption>
+      </figure>
+      <figure class="card" data-code="139">
+        <img src="./139.svg" alt="תמרור עצור בהמשך הדרך" width="120" height="120" loading="lazy" />
+        <figcaption><b>139</b> תמרור עצור בהמשך הדרך</figcaption>
+      </figure>
+      <figure class="card" data-code="141">
+        <img src="./141.svg" alt="סכנת החלקה" width="120" height="120" loading="lazy" />
+        <figcaption><b>141</b> סכנת החלקה</figcaption>
+      </figure>
+      <figure class="card" data-code="144">
+        <img src="./144.svg" alt="פסי האטה" width="120" height="120" loading="lazy" />
+        <figcaption><b>144</b> פסי האטה</figcaption>
+      </figure>
+      <figure class="card" data-code="145">
+        <img src="./145.svg" alt="תנועה דו-סטרית" width="120" height="120" loading="lazy" />
+        <figcaption><b>145</b> תנועה דו-סטרית</figcaption>
+      </figure>
+      <figure class="card" data-code="150">
+        <img src="./150.svg" alt="מקום מסוכן" width="120" height="120" loading="lazy" />
+        <figcaption><b>150</b> מקום מסוכן</figcaption>
+      </figure>
+      <figure class="card" data-code="151">
+        <img src="./151.svg" alt="תאונה" width="120" height="120" loading="lazy" />
+        <figcaption><b>151</b> תאונה</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תמרורי הוריה (2xx) <small>21</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="201">
+        <img src="./201.svg" alt="סע ישר או ימינה" width="120" height="120" loading="lazy" />
+        <figcaption><b>201</b> סע ישר או ימינה</figcaption>
+      </figure>
+      <figure class="card" data-code="202">
+        <img src="./202.svg" alt="סע ישר או שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>202</b> סע ישר או שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="203">
+        <img src="./203.svg" alt="סע ישר" width="120" height="120" loading="lazy" />
+        <figcaption><b>203</b> סע ישר</figcaption>
+      </figure>
+      <figure class="card" data-code="204">
+        <img src="./204.svg" alt="פנה ימינה לפני התמרור" width="120" height="120" loading="lazy" />
+        <figcaption><b>204</b> פנה ימינה לפני התמרור</figcaption>
+      </figure>
+      <figure class="card" data-code="205">
+        <img src="./205.svg" alt="פנה שמאלה לפני התמרור" width="120" height="120" loading="lazy" />
+        <figcaption><b>205</b> פנה שמאלה לפני התמרור</figcaption>
+      </figure>
+      <figure class="card" data-code="206">
+        <img src="./206.svg" alt="פנה ימינה אחרי התמרור" width="120" height="120" loading="lazy" />
+        <figcaption><b>206</b> פנה ימינה אחרי התמרור</figcaption>
+      </figure>
+      <figure class="card" data-code="207">
+        <img src="./207.svg" alt="פנה שמאלה אחרי התמרור" width="120" height="120" loading="lazy" />
+        <figcaption><b>207</b> פנה שמאלה אחרי התמרור</figcaption>
+      </figure>
+      <figure class="card" data-code="208">
+        <img src="./208.svg" alt="סע ימינה או שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>208</b> סע ימינה או שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="209">
+        <img src="./209.svg" alt="סע ישר או בפניית פרסה ימינה" width="120" height="120" loading="lazy" />
+        <figcaption><b>209</b> סע ישר או בפניית פרסה ימינה</figcaption>
+      </figure>
+      <figure class="card" data-code="210">
+        <img src="./210.svg" alt="סע ישר או בפניית פרסה שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>210</b> סע ישר או בפניית פרסה שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="211">
+        <img src="./211.svg" alt="סע בפניית פרסה ימינה" width="120" height="120" loading="lazy" />
+        <figcaption><b>211</b> סע בפניית פרסה ימינה</figcaption>
+      </figure>
+      <figure class="card" data-code="212">
+        <img src="./212.svg" alt="סע בפניית פרסה שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>212</b> סע בפניית פרסה שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="213">
+        <img src="./213.svg" alt="עבור מימין או משמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>213</b> עבור מימין או משמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="214">
+        <img src="./214.svg" alt="עבור מימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>214</b> עבור מימין</figcaption>
+      </figure>
+      <figure class="card" data-code="215">
+        <img src="./215.svg" alt="עבור משמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>215</b> עבור משמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="220">
+        <img src="./220.svg" alt="רחוב משולב" width="120" height="120" loading="lazy" />
+        <figcaption><b>220</b> רחוב משולב</figcaption>
+      </figure>
+      <figure class="card" data-code="221">
+        <img src="./221.svg" alt="קצה רחוב משולב" width="120" height="120" loading="lazy" />
+        <figcaption><b>221</b> קצה רחוב משולב</figcaption>
+      </figure>
+      <figure class="card" data-code="222">
+        <img src="./222.svg" alt="אזור מיתון תנועה" width="120" height="120" loading="lazy" />
+        <figcaption><b>222</b> אזור מיתון תנועה</figcaption>
+      </figure>
+      <figure class="card" data-code="223">
+        <img src="./223.svg" alt="קצה אזור מיתון תנועה" width="120" height="120" loading="lazy" />
+        <figcaption><b>223</b> קצה אזור מיתון תנועה</figcaption>
+      </figure>
+      <figure class="card" data-code="226">
+        <img src="./226.svg" alt="שביל להולכי רגל בלבד" width="120" height="120" loading="lazy" />
+        <figcaption><b>226</b> שביל להולכי רגל בלבד</figcaption>
+      </figure>
+      <figure class="card" data-code="227">
+        <img src="./227.svg" alt="שביל לאופניים" width="120" height="120" loading="lazy" />
+        <figcaption><b>227</b> שביל לאופניים</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תמרורי זכות קדימה (3xx) <small>8</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="301">
+        <img src="./301.svg" alt="תן זכות קדימה" width="120" height="120" loading="lazy" />
+        <figcaption><b>301</b> תן זכות קדימה</figcaption>
+      </figure>
+      <figure class="card" data-code="302">
+        <img src="./302.svg" alt="עצור" width="120" height="120" loading="lazy" />
+        <figcaption><b>302</b> עצור</figcaption>
+      </figure>
+      <figure class="card" data-code="303">
+        <img src="./303.svg" alt="מעגל תנועה" width="120" height="120" loading="lazy" />
+        <figcaption><b>303</b> מעגל תנועה</figcaption>
+      </figure>
+      <figure class="card" data-code="306">
+        <img src="./306.svg" alt="תן זכות קדימה להולכי רגל החוצים" width="120" height="120" loading="lazy" />
+        <figcaption><b>306</b> תן זכות קדימה להולכי רגל החוצים</figcaption>
+      </figure>
+      <figure class="card" data-code="307">
+        <img src="./307.svg" alt="תן זכות קדימה בקטע דרך צרה" width="120" height="120" loading="lazy" />
+        <figcaption><b>307</b> תן זכות קדימה בקטע דרך צרה</figcaption>
+      </figure>
+      <figure class="card" data-code="308">
+        <img src="./308.svg" alt="זכות קדימה בקטע דרך צרה" width="120" height="120" loading="lazy" />
+        <figcaption><b>308</b> זכות קדימה בקטע דרך צרה</figcaption>
+      </figure>
+      <figure class="card" data-code="309">
+        <img src="./309.svg" alt="זכות קדימה בדרך" width="120" height="120" loading="lazy" />
+        <figcaption><b>309</b> זכות קדימה בדרך</figcaption>
+      </figure>
+      <figure class="card" data-code="310">
+        <img src="./310.svg" alt="קצה הדרך שבה יש לך זכות קדימה" width="120" height="120" loading="lazy" />
+        <figcaption><b>310</b> קצה הדרך שבה יש לך זכות קדימה</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תמרורי איסורים והגבלות (4xx) <small>18</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="401">
+        <img src="./401.svg" alt="כביש סגור" width="120" height="120" loading="lazy" />
+        <figcaption><b>401</b> כביש סגור</figcaption>
+      </figure>
+      <figure class="card" data-code="402">
+        <img src="./402.svg" alt="אין כניסה" width="120" height="120" loading="lazy" />
+        <figcaption><b>402</b> אין כניסה</figcaption>
+      </figure>
+      <figure class="card" data-code="418">
+        <img src="./418.svg" alt="אזור אסור ללימוד נהיגה" width="120" height="120" loading="lazy" />
+        <figcaption><b>418</b> אזור אסור ללימוד נהיגה</figcaption>
+      </figure>
+      <figure class="card" data-code="419">
+        <img src="./419.svg" alt="קצה האזור האסור ללימוד נהיגה" width="120" height="120" loading="lazy" />
+        <figcaption><b>419</b> קצה האזור האסור ללימוד נהיגה</figcaption>
+      </figure>
+      <figure class="card" data-code="420">
+        <img src="./420.svg" alt="אסור לעקוף" width="120" height="120" loading="lazy" />
+        <figcaption><b>420</b> אסור לעקוף</figcaption>
+      </figure>
+      <figure class="card" data-code="421">
+        <img src="./421.svg" alt="קצה קטע איסור העקיפה" width="120" height="120" loading="lazy" />
+        <figcaption><b>421</b> קצה קטע איסור העקיפה</figcaption>
+      </figure>
+      <figure class="card" data-code="424">
+        <img src="./424.svg" alt="אזור דרכים עירוניות" width="120" height="120" loading="lazy" />
+        <figcaption><b>424</b> אזור דרכים עירוניות</figcaption>
+      </figure>
+      <figure class="card" data-code="425">
+        <img src="./425.svg" alt="קצה אזור דרכים עירוניות" width="120" height="120" loading="lazy" />
+        <figcaption><b>425</b> קצה אזור דרכים עירוניות</figcaption>
+      </figure>
+      <figure class="card" data-code="426">
+        <img src="./426.svg" alt="מהירות מיוחדת" width="120" height="120" loading="lazy" />
+        <figcaption><b>426</b> מהירות מיוחדת</figcaption>
+      </figure>
+      <figure class="card" data-code="427">
+        <img src="./427.svg" alt="קצה המהירות המיוחדת" width="120" height="120" loading="lazy" />
+        <figcaption><b>427</b> קצה המהירות המיוחדת</figcaption>
+      </figure>
+      <figure class="card" data-code="428">
+        <img src="./428.svg" alt="אסורה הפנייה ימינה" width="120" height="120" loading="lazy" />
+        <figcaption><b>428</b> אסורה הפנייה ימינה</figcaption>
+      </figure>
+      <figure class="card" data-code="429">
+        <img src="./429.svg" alt="אסורה הפנייה שמאלה" width="120" height="120" loading="lazy" />
+        <figcaption><b>429</b> אסורה הפנייה שמאלה</figcaption>
+      </figure>
+      <figure class="card" data-code="430">
+        <img src="./430.svg" alt="אסורה פניית פרסה לימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>430</b> אסורה פניית פרסה לימין</figcaption>
+      </figure>
+      <figure class="card" data-code="431">
+        <img src="./431.svg" alt="אסורה פניית פרסה לשמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>431</b> אסורה פניית פרסה לשמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="432">
+        <img src="./432.svg" alt="אסורה חניית רכב" width="120" height="120" loading="lazy" />
+        <figcaption><b>432</b> אסורה חניית רכב</figcaption>
+      </figure>
+      <figure class="card" data-code="433">
+        <img src="./433.svg" alt="אסורה כל עצירה וחניה" width="120" height="120" loading="lazy" />
+        <figcaption><b>433</b> אסורה כל עצירה וחניה</figcaption>
+      </figure>
+      <figure class="card" data-code="434">
+        <img src="./434.svg" alt="קצה קטע איסור החניה/העצירה" width="120" height="120" loading="lazy" />
+        <figcaption><b>434</b> קצה קטע איסור החניה/העצירה</figcaption>
+      </figure>
+      <figure class="card" data-code="437">
+        <img src="./437.svg" alt="חניה לרכב של נכה" width="120" height="120" loading="lazy" />
+        <figcaption><b>437</b> חניה לרכב של נכה</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תחבורה ציבורית (5xx) <small>8</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="501">
+        <img src="./501.svg" alt="נתיב לתחבורה ציבורית" width="120" height="120" loading="lazy" />
+        <figcaption><b>501</b> נתיב לתחבורה ציבורית</figcaption>
+      </figure>
+      <figure class="card" data-code="502">
+        <img src="./502.svg" alt="קצה נתיב לתחבורה ציבורית" width="120" height="120" loading="lazy" />
+        <figcaption><b>502</b> קצה נתיב לתחבורה ציבורית</figcaption>
+      </figure>
+      <figure class="card" data-code="503">
+        <img src="./503.svg" alt="סימון נתיב לתחבורה ציבורית (קו קטעים)" width="120" height="120" loading="lazy" />
+        <figcaption><b>503</b> סימון נתיב לתחבורה ציבורית (קו קטעים)</figcaption>
+      </figure>
+      <figure class="card" data-code="504">
+        <img src="./504.svg" alt="התנועה בכיוון החץ הלבן מותרת לכל רכב" width="120" height="120" loading="lazy" />
+        <figcaption><b>504</b> התנועה בכיוון החץ הלבן מותרת לכל רכב</figcaption>
+      </figure>
+      <figure class="card" data-code="505">
+        <img src="./505.svg" alt="תחנת אוטובוסים" width="120" height="120" loading="lazy" />
+        <figcaption><b>505</b> תחנת אוטובוסים</figcaption>
+      </figure>
+      <figure class="card" data-code="507">
+        <img src="./507.svg" alt="תחנת מוניות" width="120" height="120" loading="lazy" />
+        <figcaption><b>507</b> תחנת מוניות</figcaption>
+      </figure>
+      <figure class="card" data-code="511">
+        <img src="./511.svg" alt="אבני שפה אדום-צהוב (תחנת אוטובוס)" width="120" height="120" loading="lazy" />
+        <figcaption><b>511</b> אבני שפה אדום-צהוב (תחנת אוטובוס)</figcaption>
+      </figure>
+      <figure class="card" data-code="515">
+        <img src="./515.svg" alt="סימון נתיב לתחבורה ציבורית (קו רצוף)" width="120" height="120" loading="lazy" />
+        <figcaption><b>515</b> סימון נתיב לתחבורה ציבורית (קו רצוף)</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תמרורי מודיעין והדרכה (6xx) <small>10</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="613">
+        <img src="./613.svg" alt="הגדרת תנועות בנתיבים" width="120" height="120" loading="lazy" />
+        <figcaption><b>613</b> הגדרת תנועות בנתיבים</figcaption>
+      </figure>
+      <figure class="card" data-code="618">
+        <img src="./618.svg" alt="כביש חד-סטרי" width="120" height="120" loading="lazy" />
+        <figcaption><b>618</b> כביש חד-סטרי</figcaption>
+      </figure>
+      <figure class="card" data-code="621">
+        <img src="./621.svg" alt="מספר הנתיבים קטן — מימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>621</b> מספר הנתיבים קטן — מימין</figcaption>
+      </figure>
+      <figure class="card" data-code="622">
+        <img src="./622.svg" alt="מספר הנתיבים קטן — משמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>622</b> מספר הנתיבים קטן — משמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="623">
+        <img src="./623.svg" alt="כביש ללא מוצא" width="120" height="120" loading="lazy" />
+        <figcaption><b>623</b> כביש ללא מוצא</figcaption>
+      </figure>
+      <figure class="card" data-code="624">
+        <img src="./624.svg" alt="כביש ללא מוצא מימין" width="120" height="120" loading="lazy" />
+        <figcaption><b>624</b> כביש ללא מוצא מימין</figcaption>
+      </figure>
+      <figure class="card" data-code="625">
+        <img src="./625.svg" alt="כביש ללא מוצא משמאל" width="120" height="120" loading="lazy" />
+        <figcaption><b>625</b> כביש ללא מוצא משמאל</figcaption>
+      </figure>
+      <figure class="card" data-code="626">
+        <img src="./626.svg" alt="חניה לכלי רכב" width="120" height="120" loading="lazy" />
+        <figcaption><b>626</b> חניה לכלי רכב</figcaption>
+      </figure>
+      <figure class="card" data-code="627">
+        <img src="./627.svg" alt="חניה על המדרכה" width="120" height="120" loading="lazy" />
+        <figcaption><b>627</b> חניה על המדרכה</figcaption>
+      </figure>
+      <figure class="card" data-code="628">
+        <img src="./628.svg" alt="קצה המקום המותר לחניה" width="120" height="120" loading="lazy" />
+        <figcaption><b>628</b> קצה המקום המותר לחניה</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>רמזורים ובקרת נתיבים (7xx) <small>14</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="701">
+        <img src="./701.svg" alt="אור אדום" width="120" height="120" loading="lazy" />
+        <figcaption><b>701</b> אור אדום</figcaption>
+      </figure>
+      <figure class="card" data-code="702">
+        <img src="./702.svg" alt="אור אדום וצהוב יחד" width="120" height="120" loading="lazy" />
+        <figcaption><b>702</b> אור אדום וצהוב יחד</figcaption>
+      </figure>
+      <figure class="card" data-code="703">
+        <img src="./703.svg" alt="אור ירוק" width="120" height="120" loading="lazy" />
+        <figcaption><b>703</b> אור ירוק</figcaption>
+      </figure>
+      <figure class="card" data-code="703f">
+        <img src="./703f.svg" alt="אור ירוק מהבהב" width="120" height="120" loading="lazy" />
+        <figcaption><b>703f</b> אור ירוק מהבהב</figcaption>
+      </figure>
+      <figure class="card" data-code="704">
+        <img src="./704.svg" alt="חץ ירוק" width="120" height="120" loading="lazy" />
+        <figcaption><b>704</b> חץ ירוק</figcaption>
+      </figure>
+      <figure class="card" data-code="705">
+        <img src="./705.svg" alt="אור צהוב" width="120" height="120" loading="lazy" />
+        <figcaption><b>705</b> אור צהוב</figcaption>
+      </figure>
+      <figure class="card" data-code="706">
+        <img src="./706.svg" alt="אור צהוב מהבהב" width="120" height="120" loading="lazy" />
+        <figcaption><b>706</b> אור צהוב מהבהב</figcaption>
+      </figure>
+      <figure class="card" data-code="718">
+        <img src="./718.svg" alt="אור אדום להולכי רגל" width="120" height="120" loading="lazy" />
+        <figcaption><b>718</b> אור אדום להולכי רגל</figcaption>
+      </figure>
+      <figure class="card" data-code="719">
+        <img src="./719.svg" alt="אור ירוק להולכי רגל" width="120" height="120" loading="lazy" />
+        <figcaption><b>719</b> אור ירוק להולכי רגל</figcaption>
+      </figure>
+      <figure class="card" data-code="720">
+        <img src="./720.svg" alt="אור אדום לאופניים" width="120" height="120" loading="lazy" />
+        <figcaption><b>720</b> אור אדום לאופניים</figcaption>
+      </figure>
+      <figure class="card" data-code="721">
+        <img src="./721.svg" alt="אור ירוק לאופניים" width="120" height="120" loading="lazy" />
+        <figcaption><b>721</b> אור ירוק לאופניים</figcaption>
+      </figure>
+      <figure class="card" data-code="722">
+        <img src="./722.svg" alt="אור אדום מהבהב כפול לפני מפגש מסילה" width="120" height="120" loading="lazy" />
+        <figcaption><b>722</b> אור אדום מהבהב כפול לפני מפגש מסילה</figcaption>
+      </figure>
+      <figure class="card" data-code="723">
+        <img src="./723.svg" alt="נתיב סגור" width="120" height="120" loading="lazy" />
+        <figcaption><b>723</b> נתיב סגור</figcaption>
+      </figure>
+      <figure class="card" data-code="724">
+        <img src="./724.svg" alt="נתיב פתוח" width="120" height="120" loading="lazy" />
+        <figcaption><b>724</b> נתיב פתוח</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>סימון על פני הדרך (8xx) <small>18</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="801">
+        <img src="./801.svg" alt="קו נתיב / קו ציר הכביש — קו קטעים" width="120" height="120" loading="lazy" />
+        <figcaption><b>801</b> קו נתיב / קו ציר הכביש — קו קטעים</figcaption>
+      </figure>
+      <figure class="card" data-code="803">
+        <img src="./803.svg" alt="קו הפרדה רצוף כפול" width="120" height="120" loading="lazy" />
+        <figcaption><b>803</b> קו הפרדה רצוף כפול</figcaption>
+      </figure>
+      <figure class="card" data-code="805">
+        <img src="./805.svg" alt="קו קטעים צפוף — אזהרה לפני קו הפרדה רצוף" width="120" height="120" loading="lazy" />
+        <figcaption><b>805</b> קו קטעים צפוף — אזהרה לפני קו הפרדה רצוף</figcaption>
+      </figure>
+      <figure class="card" data-code="806">
+        <img src="./806.svg" alt="קו קטעים ליד קו רצוף" width="120" height="120" loading="lazy" />
+        <figcaption><b>806</b> קו קטעים ליד קו רצוף</figcaption>
+      </figure>
+      <figure class="card" data-code="807">
+        <img src="./807.svg" alt="קו שפה — קו רצוף צהוב" width="120" height="120" loading="lazy" />
+        <figcaption><b>807</b> קו שפה — קו רצוף צהוב</figcaption>
+      </figure>
+      <figure class="card" data-code="808">
+        <img src="./808.svg" alt="קו מלבנים לבן — נתיב ייעודי" width="120" height="120" loading="lazy" />
+        <figcaption><b>808</b> קו מלבנים לבן — נתיב ייעודי</figcaption>
+      </figure>
+      <figure class="card" data-code="809">
+        <img src="./809.svg" alt="קו הנחיה בצומת" width="120" height="120" loading="lazy" />
+        <figcaption><b>809</b> קו הנחיה בצומת</figcaption>
+      </figure>
+      <figure class="card" data-code="810">
+        <img src="./810.svg" alt="קו עצירה" width="120" height="120" loading="lazy" />
+        <figcaption><b>810</b> קו עצירה</figcaption>
+      </figure>
+      <figure class="card" data-code="811">
+        <img src="./811.svg" alt="מעבר חצייה להולכי רגל" width="120" height="120" loading="lazy" />
+        <figcaption><b>811</b> מעבר חצייה להולכי רגל</figcaption>
+      </figure>
+      <figure class="card" data-code="813">
+        <img src="./813.svg" alt="חצי כיוון בנתיב" width="120" height="120" loading="lazy" />
+        <figcaption><b>813</b> חצי כיוון בנתיב</figcaption>
+      </figure>
+      <figure class="card" data-code="814">
+        <img src="./814.svg" alt="נתיב נסיעה העומד להסתיים" width="120" height="120" loading="lazy" />
+        <figcaption><b>814</b> נתיב נסיעה העומד להסתיים</figcaption>
+      </figure>
+      <figure class="card" data-code="815">
+        <img src="./815.svg" alt="אי תנועה מסומן על הכביש" width="120" height="120" loading="lazy" />
+        <figcaption><b>815</b> אי תנועה מסומן על הכביש</figcaption>
+      </figure>
+      <figure class="card" data-code="816">
+        <img src="./816.svg" alt="אבני שפה שחור-לבן" width="120" height="120" loading="lazy" />
+        <figcaption><b>816</b> אבני שפה שחור-לבן</figcaption>
+      </figure>
+      <figure class="card" data-code="817">
+        <img src="./817.svg" alt="אבני שפה כחול-לבן" width="120" height="120" loading="lazy" />
+        <figcaption><b>817</b> אבני שפה כחול-לבן</figcaption>
+      </figure>
+      <figure class="card" data-code="818">
+        <img src="./818.svg" alt="אבני שפה אדום-לבן" width="120" height="120" loading="lazy" />
+        <figcaption><b>818</b> אבני שפה אדום-לבן</figcaption>
+      </figure>
+      <figure class="card" data-code="819">
+        <img src="./819.svg" alt="מקומות חניה מסומנים על המדרכה" width="120" height="120" loading="lazy" />
+        <figcaption><b>819</b> מקומות חניה מסומנים על המדרכה</figcaption>
+      </figure>
+      <figure class="card" data-code="820">
+        <img src="./820.svg" alt="מקום אסור לחניה" width="120" height="120" loading="lazy" />
+        <figcaption><b>820</b> מקום אסור לחניה</figcaption>
+      </figure>
+      <figure class="card" data-code="821">
+        <img src="./821.svg" alt="פס האטה" width="120" height="120" loading="lazy" />
+        <figcaption><b>821</b> פס האטה</figcaption>
+      </figure>
+      </div>
+    </section>
+    <section>
+      <h2>תמרורים באתר עבודה (9xx) <small>2</small></h2>
+      <div class="grid">
+      <figure class="card" data-code="901">
+        <img src="./901.svg" alt="אתר עבודה בדרך" width="120" height="120" loading="lazy" />
+        <figcaption><b>901</b> אתר עבודה בדרך</figcaption>
+      </figure>
+      <figure class="card" data-code="902">
+        <img src="./902.svg" alt="קצה אתר העבודה" width="120" height="120" loading="lazy" />
+        <figcaption><b>902</b> קצה אתר העבודה</figcaption>
+      </figure>
+      </div>
+    </section>
+  </body>
+</html>

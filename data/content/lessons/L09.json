@@ -1,0 +1,137 @@
+{
+  "id": "L09",
+  "order": 9,
+  "title": "חניה",
+  "subtitle": "עצירה בצד ב-40 ס״מ, חניה מקבילה ברוורס, וחידון חוקיות בשטח",
+  "summary": "מתרגלים חניה מקבילה פשוטה וברוורס ברחוב האלון, ואז נוסעים בין רצועות חניה בצבעים שונים — אדום-לבן עם תמרור 433 וכחול-לבן — ועונים בשטח: מותר לחנות כאן? מסיימים בחניה בכחול-לבן.",
+  "minutes": 15,
+  "prerequisites": ["L08"],
+  "spawnId": "tg_parking",
+  "world": "training-ground",
+  "traffic": { "density": 0.2, "pedestrians": 0.2, "seed": 99 },
+  "hour": 10,
+  "weather": "clear",
+  "briefing": [
+    {
+      "title": "איפה אסור",
+      "text": "- בתחום **12 מ׳ מצומת**, בתוך צומת, על מעבר חצייה ו-12 מ׳ לפניו\n- בתחנת אוטובוס (אבני שפה אדום-צהוב), על המדרכה (אלא אם 627/819), בנת״צ\n- מול כניסה לחניה (סימון 820), 2 מ׳ מברז כיבוי\n- כשתמרור 432 (חניה) או 433 (כל עצירה) אוסר",
+      "signs": ["432", "433", "505", "820"],
+      "diagram": "parking_12m"
+    },
+    {
+      "title": "צבעי אבני השפה",
+      "text": "**אדום-לבן** — אסורה כל עצירה וחניה. **אדום-צהוב** — תחנת אוטובוס. **כחול-לבן** — חניה מוסדרת בתשלום לפי השלט. **אפור** — מותר אלא אם תמרור אוסר.",
+      "signs": ["818", "511", "817", "626"]
+    },
+    {
+      "title": "חניה מקבילה ברוורס",
+      "text": "1. עוצרים במקביל לרכב הקדמי, מראה מול מראה, כמטר ממנו.\n2. רוורס ישר עד שהכתף שלנו מול הפגוש האחורי שלו; הגה מלא ימינה.\n3. כשרואים במראה השמאלית את פנס הרכב האחורי — הגה מלא שמאלה.\n4. מיישרים, ומתקנים קדימה. **עד 40 ס״מ** מאבן השפה, מקביל.",
+      "signs": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "pull_in",
+      "title": "עצירה בצד — 40 ס״מ",
+      "say": ["נתחיל בפשוט: עצירה בצד ימין ברחוב האלון. מראה, איתות ימינה, האטה, ומתקרבים לאבן השפה — עד ארבעים סנטימטר, ומקביל. בסוף P."],
+      "instruction": "עצירה בצד ימין: עד 40 ס״מ מהמדרכה, מקביל, P",
+      "done": { "kind": "parked", "maxKerbDistance": 0.4, "maxAngleDeg": 8, "bayId": "p3" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["PARKING_TOO_FAR"] }, "do": [{ "kind": "say", "text": "רחוק מהמדרכה. תיקון: קדימה עם הגה ימינה, ואז ליישר.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["PARKING_ANGLE"] }, "do": [{ "kind": "say", "text": "לא מקביל. תיקון קטן קדימה ואחורה מיישר.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["KERB_STRIKE"] }, "do": [{ "kind": "say", "text": "נגענו באבן השפה — להתרחק מעט.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_PARKING"] }, "do": [{ "kind": "say", "text": "בתוך ארבעים סנטימטר ומקביל. יפה.", "priority": 1 }] }
+      ],
+      "focus": ["PARKING_TOO_FAR", "PARKING_ANGLE", "KERB_STRIKE", "NO_INDICATOR_TURN"],
+      "onDone": ["עצירה טובה. עכשיו חניה אמיתית — ברוורס בין שני רכבים."]
+    },
+    {
+      "id": "parallel_reverse",
+      "title": "חניה מקבילה ברוורס",
+      "say": [
+        "שני רכבים חונים — אחד לפנינו ואחד מאחורינו, והרווח בין שניהם הוא המקום שלנו.",
+        "סעו קדימה, עצרו במקביל לרכב הקדמי, מראה מול מראה. ואז: רוורס, הגה ימינה, וכשהפנס של הרכב האחורי נראה במראה — הגה שמאלה. לאט, עם הבלם."
+      ],
+      "instruction": "קדימה במקביל לרכב הקדמי → רוורס לתוך הרווח → יישור, 40 ס״מ, P",
+      "done": { "kind": "all", "of": [{ "kind": "reversed", "metres": 4 }, { "kind": "parked", "maxKerbDistance": 0.4, "maxAngleDeg": 8, "bayId": "p3" }] },
+      "triggers": [
+        { "when": { "kind": "elapsed", "seconds": 0.5 }, "do": [{ "kind": "spawn_vehicle", "where": "ahead", "distance": 8, "speedKmh": 0 }, { "kind": "spawn_vehicle", "where": "behind", "distance": 8, "speedKmh": 0 }] },
+        { "when": { "kind": "violation", "types": ["KERB_STRIKE", "KERB_MOUNT"] }, "do": [{ "kind": "say", "text": "המדרכה. סובבנו שמאלה מאוחר מדי — קדימה ליישור, ושוב.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["COLLISION", "NEAR_MISS"] }, "do": [{ "kind": "say", "text": "קרוב מדי לרכב החונה. עוצרים, קדימה מעט, ומתחילים את הרוורס מחדש.", "priority": 2 }] },
+        { "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "ברוורס מסתכלים אחורה דרך החלון — לא רק במראות.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_PARKING"] }, "do": [{ "kind": "say", "text": "חניה מקבילה נקייה. זה בדיוק מה שהבוחן רוצה לראות.", "priority": 1 }] }
+      ],
+      "focus": ["KERB_STRIKE", "KERB_MOUNT", "PARKING_TOO_FAR", "PARKING_ANGLE", "NO_SHOULDER_CHECK"],
+      "onDone": ["חנינו. היציאה מחניה היא תמרון בפני עצמו."]
+    },
+    {
+      "id": "pull_out",
+      "title": "יציאה מהחניה",
+      "say": ["מראה פנימית, מראת שמאל, איתות שמאלה, כתף שמאל — ויוצאים בזווית קטנה."],
+      "instruction": "מראות → איתות שמאלה → כתף → יציאה",
+      "done": { "kind": "all", "of": [{ "kind": "distance", "metres": 12 }, { "kind": "glanced", "target": "left_shoulder", "withinSeconds": 20 }] },
+      "triggers": [{ "when": { "kind": "violation", "types": ["NO_SHOULDER_CHECK"] }, "do": [{ "kind": "say", "text": "כתף שמאל לפני היציאה.", "priority": 2 }] }],
+      "focus": ["NO_SHOULDER_CHECK", "NO_INDICATOR_LANE_CHANGE"],
+      "onDone": ["עכשיו נעשה סיבוב ונבדוק כמה מקומות חניה."]
+    },
+    {
+      "id": "drive_to_red_white",
+      "title": "נסיעה לרחוב הברוש",
+      "say": ["ימינה לשדרה, ישר ברמזור, ימינה לרחוב התמר, מסביב לעיקול, ומזרחה ברחוב הברוש. שם יש רצועת חניה עם אבני שפה צבועות."],
+      "instruction": "סעו לרחוב הברוש לפי ההנחיות",
+      "navigateTo": { "pos": [45, -118.5], "via": ["n21", "n11", "n01", "n00", "n10"] },
+      "done": { "kind": "reach", "pos": [45, -118.5], "radius": 14 },
+      "triggers": [{ "when": { "kind": "reach", "junctionId": "n11", "radius": 85 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] }],
+      "focus": ["FAILED_TO_YIELD", "NO_INDICATOR_TURN"],
+      "onDone": ["הסתכלו ימינה: אבני שפה אדום-לבן ותמרור 433."]
+    },
+    {
+      "id": "quiz_red_white",
+      "title": "חידון: מותר לחנות כאן?",
+      "say": ["אבני שפה אדום-לבן, ותמרור ״אסורה כל עצירה וחניה״. מה המשמעות?"],
+      "done": { "kind": "quiz_answered", "minCorrect": 1 },
+      "quiz": ["0658"],
+      "onDone": ["נכון — כאן לא עוצרים בכלל, גם לא לרגע."]
+    },
+    {
+      "id": "drive_to_blue_white",
+      "title": "נסיעה לרחוב התמר",
+      "say": ["ממשיכים מזרחה, סביב הבלוק: דרומה ברחוב האלון, ימינה לשדרה, ימינה ברמזור לרחוב הדקל, שמאלה לרחוב הברוש, ובעיקול דרומה לרחוב התמר."],
+      "instruction": "סעו לרחוב התמר לפי ההנחיות",
+      "navigateTo": { "pos": [-121.5, -60], "via": ["n20", "n21", "n11", "n10", "n00"] },
+      "done": { "kind": "reach", "pos": [-121.5, -60], "radius": 14 },
+      "triggers": [{ "when": { "kind": "reach", "junctionId": "n11", "radius": 85 }, "do": [{ "kind": "set_signal", "junctionId": "n11", "state": "green" }] }],
+      "focus": ["FAILED_TO_YIELD", "PEDESTRIAN_NOT_YIELDED", "NO_INDICATOR_TURN"],
+      "onDone": ["מימין: אבני שפה כחול-לבן."]
+    },
+    {
+      "id": "quiz_blue_white",
+      "title": "חידון: כחול-לבן",
+      "say": ["אבני שפה צבועות כחול-לבן לסירוגין — מה זה אומר?"],
+      "done": { "kind": "quiz_answered", "minCorrect": 1 },
+      "quiz": ["0657"],
+      "onDone": ["נכון — חניה מוסדרת, בתשלום ולפי השלט. במציאות: אפליקציה או מדחן."]
+    },
+    {
+      "id": "park_blue_white",
+      "title": "חניה בכחול-לבן",
+      "say": ["כאן מותר — אז חונים: מראה, איתות ימינה, עד ארבעים סנטימטר מאבן השפה, מקביל, בלם חניה ו-P."],
+      "instruction": "חניה מקבילה בכחול-לבן: 40 ס״מ, מקביל, P",
+      "done": { "kind": "parked", "maxKerbDistance": 0.4, "maxAngleDeg": 8, "bayId": "p2" },
+      "triggers": [
+        { "when": { "kind": "violation", "types": ["PARKING_TOO_FAR", "PARKING_ANGLE"] }, "do": [{ "kind": "say", "text": "עוד תיקון קטן — 40 ס״מ ומקביל.", "priority": 1 }] },
+        { "when": { "kind": "violation", "types": ["GOOD_PARKING"] }, "do": [{ "kind": "say", "text": "חניה מושלמת.", "priority": 1 }] }
+      ],
+      "focus": ["PARKING_TOO_FAR", "PARKING_ANGLE", "KERB_STRIKE"],
+      "quiz": ["1553", "0203", "1766"],
+      "onDone": ["חנינו במקום מותר ובצורה נכונה."]
+    }
+  ],
+  "pass": { "maxMinor": 8, "maxMajor": 2, "allowCritical": false },
+  "topics": ["parking_stopping", "road_markings", "parking"],
+  "debrief": [
+    "חניה היא שני דברים: איפה מותר (צבעים, 12 מטר, תמרורים) ואיך (40 ס״מ, מקביל, בלם חניה).",
+    "ברוורס — לאט, עם הבלם, ועם הראש מסובב אחורה. נקודות הייחוס במראות עושות את העבודה.",
+    "בשיעור הבא: נסיעה לאחור ופניית פרסה."
+  ]
+}
