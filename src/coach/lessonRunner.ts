@@ -6,6 +6,9 @@
  *     evaluate `done` / `fail` / triggers every tick, run actions, ask quiz questions
  *     ('theory:question' ↔ 'theory:answer' → 'theory:answered'), restart on fail / timeout
  *     ('sim:reset' {reason:'step_restart'})
+ *   → quiz questions are asked when the step starts if its `done` condition waits for them
+ *     (`quiz_answered`), otherwise once the rest of `done` is satisfied (end of the step);
+ *     consecutive questions are spaced by QUIZ_NEXT_DELAY_S so the feedback can be read
  *   → lesson end: pass per `lesson.pass` over the violations since start, debrief,
  *     'lesson:completed' {passed, score = clamp(100 − points·3 + score deltas, 0, 100)}.
  *
@@ -38,6 +41,9 @@ export interface LessonRunnerOptions {
 
 export type RunnerState = 'idle' | 'briefing' | 'running' | 'finished';
 
+/** Sim seconds between an answer and the next question (the UI shows the feedback meanwhile). */
+export const QUIZ_NEXT_DELAY_S = 2.5;
+
 export interface StepState {
   index: number;
   step: LessonStep;
@@ -49,7 +55,7 @@ export interface StepState {
   passed: { junctionId: string; turn: Turn; time: number }[];
   glances: GlanceEvent[];
   acknowledged: boolean;
-  quiz: { remaining: string[]; askedOnce: Set<string>; waiting?: string; answered: number; correct: number; askable: number };
+  quiz: { remaining: string[]; askedOnce: Set<string>; waiting?: string; answered: number; correct: number; askable: number; started: boolean; nextAt?: number };
   triggers: { prev: boolean; count: number }[];
   timers: WeakMap<object, number>;
   prevConnectorId?: string;
@@ -207,7 +213,11 @@ export class LessonRunner implements System {
       this.restartStep(ctx, false);
       return;
     }
-    if (this.evaluate(step.done, st, ctx)) this.completeStep(ctx);
+    if (st.quiz.nextAt !== undefined && ctx.time >= st.quiz.nextAt) {
+      st.quiz.nextAt = undefined;
+      this.askNext();
+    }
+    if (this.evaluate(step.done, st, ctx) && this.quizSettled(st)) this.completeStep(ctx);
   }
 
   dispose(): void {
@@ -232,7 +242,7 @@ export class LessonRunner implements System {
       passed: [],
       glances: [],
       acknowledged: false,
-      quiz: { remaining: [...step.quiz], askedOnce: new Set(), answered: 0, correct: 0, askable: 0 },
+      quiz: { remaining: [...step.quiz], askedOnce: new Set(), answered: 0, correct: 0, askable: 0, started: false },
       triggers: step.triggers.map(() => ({ prev: false, count: 0 })),
       timers: new WeakMap(),
       prevConnectorId: ctx.localisation.connectorId,
@@ -240,6 +250,8 @@ export class LessonRunner implements System {
     };
     this.pendingStepIndex = undefined;
     this.instructor.setFocus(step.focus);
+    // the step event goes out first so the UI can reset per-step state (hints, pill) before the step's own hint
+    this.bus.emit('lesson:step', { lessonId: lesson.id, stepId: step.id, index, total: lesson.steps.length, title: step.title });
     if (!restart) for (const text of step.say) this.dialogue.say({ who: 'instructor', text, priority: 2 });
     else if (step.say[0]) this.dialogue.say({ who: 'instructor', text: step.say[0], priority: 2 });
     if (step.instruction) this.bus.emit('lesson:hint', { text: step.instruction, icon: 'step', seconds: 8 });
@@ -249,12 +261,25 @@ export class LessonRunner implements System {
       if (target) this.navigator.setDestination(target, { via: n.via, speak: true, who: 'instructor' });
       else this.navigator.setRoute(null);
     } else this.navigator.setRoute(null);
-    this.bus.emit('lesson:step', { lessonId: lesson.id, stepId: step.id, index, total: lesson.steps.length });
-    if (step.quiz.length > 0) {
-      this.step.quiz.askable = step.quiz.filter((id) => this.questionLookup?.(id)).length;
-      if (this.step.quiz.askable > 0) this.dialogue.sayLine('lesson.quiz.intro', undefined, { priority: 1 });
-      this.askNext();
-    }
+    if (step.quiz.length > 0 && mentionsQuiz(step.done)) this.startQuiz(this.step);
+  }
+
+  /** Ask the step's questions (now when `done` waits for them, otherwise once the rest of the step is done). */
+  private startQuiz(st: StepState): void {
+    st.quiz.started = true;
+    st.quiz.remaining = st.step.quiz.filter((id) => this.questionLookup?.(id)); // ids missing from the bank are skipped
+    st.quiz.askable = st.quiz.remaining.length;
+    if (st.quiz.askable > 0) this.dialogue.sayLine('lesson.quiz.intro', undefined, { priority: 1 });
+    this.askNext();
+  }
+
+  /** True when the step's quiz (if any) does not hold the step back any more. */
+  private quizSettled(st: StepState): boolean {
+    if (st.step.quiz.length === 0) return true;
+    if (!st.quiz.started) this.startQuiz(st);
+    const q = st.quiz;
+    if (q.askable === 0) return true;
+    return q.waiting === undefined && q.nextAt === undefined && q.askedOnce.size >= q.askable && q.correct >= Math.min(this.minCorrect(st), q.askable);
   }
 
   private completeStep(ctx: SimContext): void {
@@ -353,7 +378,7 @@ export class LessonRunner implements System {
     this.bus.emit('theory:answered', { questionId, correct });
     st.quiz.waiting = undefined;
     const need = Math.min(this.minCorrect(st), st.quiz.askable);
-    if (st.quiz.correct < need || st.quiz.remaining.some((id) => !st.quiz.askedOnce.has(id))) this.askNext();
+    if (st.quiz.correct < need || st.quiz.remaining.some((id) => !st.quiz.askedOnce.has(id))) st.quiz.nextAt = (this.lastCtx?.time ?? 0) + QUIZ_NEXT_DELAY_S;
   }
 
   private minCorrect(st: StepState): number {
@@ -509,4 +534,11 @@ export class LessonRunner implements System {
 
 function clampPriority(p: number): 0 | 1 | 2 | 3 {
   return Math.max(0, Math.min(3, Math.round(p))) as 0 | 1 | 2 | 3;
+}
+
+/** Does the condition tree wait for the step's quiz (`quiz_answered`)? */
+export function mentionsQuiz(c: Condition): boolean {
+  if (c.kind === 'quiz_answered') return true;
+  if (c.kind === 'all' || c.kind === 'any') return (c.of as Condition[]).some(mentionsQuiz);
+  return false;
 }

@@ -111,6 +111,8 @@ export const LessonSchema = z.object({
   prerequisites: z.array(z.string()).default([]),
   /** Where the lesson starts. */
   spawnId: z.string(),
+  /** Start parked at the right-hand kerb of the spawn lane (pull-out practice) instead of the lane centre. */
+  startAtKerb: z.boolean().default(false),
   /** Use the synthetic training ground instead of the real map. */
   world: z.enum(['north-tlv', 'training-ground']).default('north-tlv'),
   traffic: z.object({ density: z.number().min(0).max(1).default(0.3), pedestrians: z.number().min(0).max(1).default(0.3), seed: z.number().int().default(1) }).prefault({}),

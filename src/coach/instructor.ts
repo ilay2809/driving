@@ -11,6 +11,8 @@
  *    {kind:'brake'}, says "אני בולם!" and a one-line explanation afterwards
  *  - `setFocus(types)`: the lesson's focus violations get extra emphasis (higher priority,
  *    shorter cooldown, the "זה בדיוק מה שאנחנו מתרגלים" suffix)
+ *  - `setMuted(true)`: no remarks / interventions (the lesson mode mutes the instructor while
+ *    the briefing is on screen, so the first thing the player hears is the greeting)
  */
 import type { EventBus } from '@/core/events';
 import { createRng, type SimContext, type System } from '@/core/sim';
@@ -49,6 +51,7 @@ export class Instructor implements System {
   private readonly interventionsEnabled: boolean;
   private navigator?: Navigator;
   private greeted = false;
+  private muted = false;
   private lastMinorAt = -Infinity;
   private lastInterventionAt = -Infinity;
   private readonly focus = new Set<ViolationType>();
@@ -89,6 +92,13 @@ export class Instructor implements System {
   }
   get focusTypes(): ViolationType[] {
     return [...this.focus];
+  }
+  /** While muted the instructor neither comments on violations nor intervenes. */
+  setMuted(on: boolean): void {
+    this.muted = on;
+  }
+  get isMuted(): boolean {
+    return this.muted;
   }
   get interventions(): number {
     return this.interventionCount;
@@ -146,7 +156,7 @@ export class Instructor implements System {
   update(ctx: SimContext): void {
     this.lastCtx = ctx;
     if (!this.greeted && this.autoGreet && ctx.coachPresent && (ctx.mode === 'free' || ctx.mode === 'training_ground')) this.greet(ctx.mode);
-    if (!this.interventionsEnabled || !ctx.coachPresent || ctx.paused) return;
+    if (!this.interventionsEnabled || !ctx.coachPresent || ctx.paused || this.muted) return;
     if (ctx.time - this.lastInterventionAt < INTERVENTION_INTERVAL) return;
     const preferred = ctx.localisation.laneId ? this.navigator?.expectedConnectorFrom(ctx.localisation.laneId)?.id : undefined;
     const danger = predictDanger(ctx, this.graph, this.dialogue.lines, { preferredConnectorId: preferred });
@@ -168,7 +178,7 @@ export class Instructor implements System {
 
   private onViolation(v: Violation): void {
     const info = VIOLATIONS[v.type];
-    if (!info) return;
+    if (!info || this.muted) return;
     const time = this.lastCtx?.time ?? v.time;
     const focused = this.focus.has(v.type);
     const params: LineParams = { ...(v.details ?? {}), limit: v.details?.limit ?? this.lastCtx?.localisation.speedLimit ?? '' };

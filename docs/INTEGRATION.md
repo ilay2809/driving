@@ -39,9 +39,16 @@ then `mirrors.render()` and the main render (`WorldRenderer.update(cameraPos)` f
 
 - **menu**: no world systems running; UI screens only.
 - **lesson**: world = lesson.world (training-ground or north-tlv), spawn = lesson.spawnId, traffic from
-  lesson.traffic, hour/weather from the lesson; systems: Instructor (verbosity normal, focus =
-  lesson steps' focus), LessonRunner (questionLookup = TheoryEngine.lookup), Navigator; on
-  `lesson:completed` → Profile.recordLesson + debrief screen.
+  lesson.traffic, hour/weather from the lesson; systems: Instructor (verbosity high, focus =
+  lesson steps' focus, muted until the first step so the greeting comes first), LessonRunner
+  (questionLookup = TheoryEngine.lookup), Navigator; on `lesson:completed` → Profile.recordLesson
+  (via Profile.attach) + `profile.save()` + debrief screen (violations since the first step).
+  `lesson.startAtKerb` moves the spawned car to the right-hand kerb (pull-out practice; the pose
+  becomes the respawn pose). Enter (`input.acknowledge`) → `ui:acknowledged` {context:'continue'}
+  for steps with an `acknowledged` condition. Quiz questions: asked at step start when `done`
+  waits for `quiz_answered`, otherwise once the rest of `done` holds; 2.5 s between questions.
+  `lesson:step` carries the step `title` (HUD pill) and is emitted before the step's hint, so the
+  UI clears the previous step's hints on it.
 - **free**: spawn chosen in the setup screen; coachPresent toggles the Instructor; "law monitor"
   shows violations even without the instructor; optional "police" (future).
 - **test**: route = one of the world's `routes` of kind 'test' (random unless chosen); Examiner with

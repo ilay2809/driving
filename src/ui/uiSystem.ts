@@ -149,10 +149,14 @@ export class UISystem implements System {
       on('input:glance', ({ target }) => this.hud.glance(target)),
       on('lesson:briefing', (b) => this.showScreen('lessonBriefing', { lessonId: b.lessonId, title: b.title, slides: b.slides })),
       on('lesson:hint', ({ text, icon, seconds }) => this.subtitles.hint(text, icon, seconds)),
-      on('lesson:step', ({ index, total }) => this.hud.setStep(index + 1, total)),
+      on('lesson:step', ({ index, total, title }) => {
+        this.hud.setStep(index + 1, total, title);
+        this.subtitles.clearHints();
+      }),
       on('lesson:highlight', ({ target, seconds }) => this.hud.highlight(target, seconds)),
       on('lesson:completed', () => {
         this.hud.clearStep();
+        this.subtitles.clearHints();
         this.hud.navBanner.clear();
         this.minimap.setNextJunction(undefined);
       }),
@@ -177,6 +181,7 @@ export class UISystem implements System {
     this.hud.lawMonitor.clear();
     this.hud.navBanner.clear();
     this.subtitles.clear();
+    this.subtitles.clearHints();
     this.minimap.setNextJunction(undefined);
     this.hud.clearStep();
   }
@@ -271,14 +276,28 @@ export class UISystem implements System {
   /** Replace whatever is open with this screen. */
   showScreen<K extends ScreenName>(name: K, props: ScreenPropsMap[K]): HTMLElement {
     this.hideScreens();
-    return this.mount(name, FACTORIES[name](this.host(), props));
+    const host = this.host();
+    return this.mount(name, FACTORIES[name](host, props), host);
   }
 
   /** Open a screen on top of the current one (the one below is hidden, not disposed). */
   pushScreen<K extends ScreenName>(name: K, props: ScreenPropsMap[K]): HTMLElement {
     const top = this.stack[this.stack.length - 1];
     if (top) top.handle.el.hidden = true;
-    return this.mount(name, FACTORIES[name](this.host(), props));
+    const host = this.host();
+    return this.mount(name, FACTORIES[name](host, props), host);
+  }
+
+  /** Close one specific mounted screen (the top one → popScreen; a hidden one below → removed in place). */
+  private closeScreen(m: MountedScreen): void {
+    const i = this.stack.indexOf(m);
+    if (i < 0) return;
+    if (i === this.stack.length - 1) {
+      this.popScreen();
+      return;
+    }
+    this.stack.splice(i, 1);
+    this.unmount(m);
   }
 
   /** Close the top screen and reveal the one below (if any). */
@@ -300,12 +319,15 @@ export class UISystem implements System {
     setHidden(this.screensLayer, true);
   }
 
-  private host(): ScreenHost {
-    return { bus: this.bus, prefs: this.prefs, close: () => this.popScreen() };
+  private host(): ScreenHost & { mounted?: MountedScreen } {
+    const host: ScreenHost & { mounted?: MountedScreen } = { bus: this.bus, prefs: this.prefs, close: () => (host.mounted ? this.closeScreen(host.mounted) : this.popScreen()) };
+    return host;
   }
 
-  private mount(name: AnyScreenName, handle: ScreenHandle): HTMLElement {
-    this.stack.push({ name, handle });
+  private mount(name: AnyScreenName, handle: ScreenHandle, host?: { mounted?: MountedScreen }): HTMLElement {
+    const mounted: MountedScreen = { name, handle };
+    if (host) host.mounted = mounted;
+    this.stack.push(mounted);
     this.screensLayer.appendChild(handle.el);
     this.applyKind(handle);
     setHidden(this.screensLayer, false);
@@ -330,7 +352,8 @@ export class UISystem implements System {
   private pushTheoryQuestion(q: Parameters<typeof theoryModalScreen>[1]): void {
     const top = this.stack[this.stack.length - 1];
     if (top) top.handle.el.hidden = true;
-    this.mount('theoryQuestion', theoryModalScreen(this.host(), q));
+    const host = this.host();
+    this.mount('theoryQuestion', theoryModalScreen(host, q), host);
   }
 
   // ------------------------------------------------------------- keyboard

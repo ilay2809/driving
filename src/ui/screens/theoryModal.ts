@@ -18,6 +18,7 @@ export const NO_FEEDBACK_GRACE_MS = 1500;
 export function theoryModalScreen(host: ScreenHost, q: SimEventMap['theory:question']): ScreenHandle {
   const question: TheoryQuestion = { id: q.questionId, text: q.text, answers: q.answers, correctIndex: -1, category: '', classes: ['B'], image: q.image, signs: [], topics: [] };
   let answered = false;
+  let gotVerdict = false;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
   let offAnswered: (() => void) | undefined;
 
@@ -34,10 +35,10 @@ export function theoryModalScreen(host: ScreenHost, q: SimEventMap['theory:quest
       b.disabled = true;
       if (k !== i) b.classList.add('dim');
     });
-    host.bus.emit('theory:answer', { questionId: q.questionId, index: i });
-    closeTimer = setTimeout(() => host.close(), NO_FEEDBACK_GRACE_MS);
+    // subscribe first: the lesson runner answers synchronously inside the 'theory:answer' emit
     offAnswered = host.bus.on('theory:answered', (res) => {
       if (res.questionId !== q.questionId) return;
+      gotVerdict = true;
       offAnswered?.();
       if (closeTimer) clearTimeout(closeTimer);
       buttons[i]?.classList.remove('dim');
@@ -45,6 +46,8 @@ export function theoryModalScreen(host: ScreenHost, q: SimEventMap['theory:quest
       feedback.replaceChildren(el('div', { class: `feedback ${res.correct ? 'correct' : 'wrong'}`, attrs: { role: 'status' } }, icon(res.correct ? 'check' : 'close', { size: 22 }), el('b', { text: res.correct ? THEORY.correct : THEORY.wrong })));
       closeTimer = setTimeout(() => host.close(), FEEDBACK_MS);
     });
+    host.bus.emit('theory:answer', { questionId: q.questionId, index: i });
+    if (!gotVerdict) closeTimer = setTimeout(() => host.close(), NO_FEEDBACK_GRACE_MS);
   }
 
   return {

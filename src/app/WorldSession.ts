@@ -254,18 +254,26 @@ export class WorldSession {
     this.disposed = true;
     this.loop.stop();
     for (const d of this.disposers) d();
-    for (const s of [...this.modeSystems, ...this.systems]) s.dispose?.();
-    this.dialogue.dispose?.();
-    this.judge.dispose?.();
-    this.traffic.dispose();
-    this.signals.dispose();
-    this.trafficRenderer.dispose();
-    this.worldRenderer.dispose();
-    this.mirrors.dispose();
-    this.audio.dispose();
-    this.input.dispose();
-    this.vehicle.dispose();
-    this.physics.dispose();
+    // every object is disposed exactly once: input / vehicle / judge / dialogue / signals are also
+    // systems, and disposing the vehicle twice frees its Rapier body twice (WASM "unreachable")
+    const done = new Set<object>();
+    const once = (o: { dispose?: () => void }) => {
+      if (done.has(o)) return;
+      done.add(o);
+      o.dispose?.();
+    };
+    for (const s of [...this.modeSystems, ...this.systems]) once(s);
+    once(this.dialogue);
+    once(this.judge);
+    once(this.traffic);
+    once(this.signals);
+    once(this.trafficRenderer);
+    once(this.worldRenderer);
+    once(this.mirrors);
+    once(this.audio);
+    once(this.input);
+    once(this.vehicle);
+    once(this.physics);
     this.scene.clear();
   }
 }

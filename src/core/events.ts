@@ -50,7 +50,7 @@ export interface SimEventMap {
   /** The examiner / instructor pressed the dual brake (or grabbed the wheel). */
   'coach:intervention': { kind: 'brake' | 'wheel'; reason: string; time: number };
   'mode:changed': { mode: SimMode };
-  'lesson:step': { lessonId: string; stepId: string; index: number; total: number };
+  'lesson:step': { lessonId: string; stepId: string; index: number; total: number; title?: string };
   'lesson:completed': { lessonId: string; passed: boolean; score: number };
   'test:started': { routeId: string };
   'test:finished': { passed: boolean; points: number; violations: Violation[]; durationSec: number };

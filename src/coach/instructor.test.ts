@@ -96,6 +96,21 @@ describe('Instructor', () => {
     expect(high.says()[0]!.text).toContain('30');
   });
 
+  it('stays quiet while muted (lesson briefing) and reacts again once unmuted', () => {
+    const { t, ins, violation, says, systems } = setup({ mode: 'lesson', autoGreet: false });
+    ins.setMuted(true);
+    t.step(0.1, systems);
+    violation('NO_INDICATOR_TURN');
+    violation('APPROACHING_STOP_SIGN');
+    t.advance(2, systems);
+    expect(says()).toHaveLength(0);
+    expect(ins.isMuted).toBe(true);
+    ins.setMuted(false);
+    violation('NO_INDICATOR_TURN');
+    t.step(0.1, systems);
+    expect(says()).toHaveLength(1);
+  });
+
   it('emphasises the lesson focus', () => {
     const { t, ins, violation, says, systems } = setup({ autoGreet: false });
     ins.setFocus(['NO_INDICATOR_TURN']);
