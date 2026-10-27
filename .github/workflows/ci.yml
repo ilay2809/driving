@@ -31,6 +31,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      - name: Build (root base path, for the e2e suite)
+        run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end (headless WebGL via SwiftShader)
+        run: pnpm exec playwright test
+        env:
+          CI: 'true'
       - name: Build (GitHub Pages base path)
         run: BASE_PATH=/${{ github.event.repository.name }}/ pnpm build
       - uses: actions/upload-pages-artifact@v3

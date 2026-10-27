@@ -33,7 +33,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `pnpm exec vite preview --port ${PREVIEW_PORT} --strictPort`,
+    command: `pnpm exec vite preview --port ${PREVIEW_PORT} --strictPort${process.env.PW_OUT_DIR ? ` --outDir ${process.env.PW_OUT_DIR}` : ''}`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 60_000,
