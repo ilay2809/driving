@@ -1,5 +1,10 @@
-/** Application shell placeholder — replaced by the integration step. */
-export async function startApp(): Promise<void> {
-  const el = document.getElementById('ui');
-  if (el) el.innerHTML = '<div class="boot" dir="rtl"><h1>סימולטור נהיגה — צפון תל אביב</h1><p>טוען…</p></div>';
+/** Application entry (loaded by src/main.ts). */
+import { AppShell } from './app/AppShell';
+import './modes/modes.css';
+
+export async function startApp(): Promise<AppShell> {
+  const app = new AppShell();
+  (window as unknown as { __app?: AppShell }).__app = app;
+  await app.boot();
+  return app;
 }
