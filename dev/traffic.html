@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>תנועה — מגרש אימונים (harness)</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body { margin: 0; height: 100%; background: #14171c; color: #e8e8e8; font-family: system-ui, 'Heebo', sans-serif; }
+      #wrap { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 100vh; }
+      #panel { padding: 10px 12px; overflow: auto; background: #1b1f26; border-left: 1px solid #2a2f3a; font-size: 13px; }
+      #panel h1 { font-size: 15px; margin: 0 0 8px; }
+      #panel label { display: block; margin: 6px 0 2px; color: #b8bec9; }
+      #panel input[type=range] { width: 100%; }
+      #panel button { margin: 2px 2px 2px 0; padding: 4px 8px; background: #2d3442; color: #fff; border: 1px solid #3c4557; border-radius: 4px; cursor: pointer; font-size: 12px; }
+      #panel button:hover { background: #3b4457; }
+      #stats { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre; color: #9fe3a3; margin-top: 8px; direction: ltr; text-align: left; }
+      #help { color: #8d95a3; font-size: 11px; margin-top: 10px; line-height: 1.5; }
+      #view { position: relative; overflow: hidden; }
+      canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+      #gl { display: none; }
+      body.three #gl { display: block; }
+      body.three #map { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <aside id="panel">
+        <h1>תנועה — מגרש אימונים</h1>
+        <label>צפיפות רכבים: <span id="densityVal">0.5</span></label>
+        <input id="density" type="range" min="0" max="1" step="0.05" value="0.5" />
+        <label>הולכי רגל: <span id="pedVal">0.4</span></label>
+        <input id="peds" type="range" min="0" max="1" step="0.05" value="0.4" />
+        <label>מהירות סימולציה: <span id="scaleVal">1</span>×</label>
+        <input id="scale" type="range" min="0" max="4" step="0.25" value="1" />
+        <div>
+          <button id="pause">השהה</button>
+          <button id="reset">אתחול (seed חדש)</button>
+          <button id="follow">עקוב אחרי הנהג</button>
+          <button id="three">תצוגה תלת-ממדית</button>
+        </div>
+        <label>בקשות מהמורה (coach:request)</label>
+        <div>
+          <button data-spawn="ahead">רכב מלפנים</button>
+          <button data-spawn="behind">רכב מאחור</button>
+          <button data-spawn="oncoming">רכב ממול</button>
+          <button data-spawn="from_right">רכב מימין</button>
+          <button data-spawn="from_left">רכב משמאל</button>
+          <button data-spawn="inside_roundabout">רכב בכיכר</button>
+          <button id="spawnPed">הולך רגל במעבר הקרוב</button>
+          <button id="clear">נקה תנועה</button>
+          <button data-signal="red">רמזור אדום</button>
+          <button data-signal="green">רמזור ירוק</button>
+          <button data-signal="release">שחרר רמזור</button>
+        </div>
+        <div id="stats"></div>
+        <div id="help">
+          חצים: נהיגת הרכב המדומה (↑ גז, ↓ בלם/רוורס, ← → היגוי). גלגלת: זום. גרירה: הזזה.<br />
+          צבעים: ירוק = נוסע, צהוב = בולם, אדום = ממתין/נותן זכות קדימה, כחול = אוטובוס, סגול = נהג "רע".<br />
+          קווי עצירה צבועים לפי מצב הרמזור. הולכי רגל: עיגולים (לבן = הולך, צהוב = ממתין, אדום = חוצה).
+        </div>
+      </aside>
+      <main id="view">
+        <canvas id="map"></canvas>
+        <canvas id="gl"></canvas>
+      </main>
+    </div>
+    <script type="module" src="/src/dev/traffic.ts"></script>
+  </body>
+</html>
