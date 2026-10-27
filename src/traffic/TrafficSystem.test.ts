@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { TrafficAgentState } from '@/core/types';
-import { dist2 } from '@/world/geo';
-import { JUNCTION } from './constants';
+import { dist2, forwardOf } from '@/world/geo';
+import { JUNCTION, SPAWN } from './constants';
 import { createTrafficHarness } from './harness';
+import { INITIAL_FILL } from './spawner';
 import { obbGap } from './util';
 
 /** Per-agent bookkeeping across frames for the invariants below. */
@@ -190,6 +191,35 @@ describe('TrafficSystem — scripted spawns', () => {
     const v = h.traffic.spawnVehicle({ where: 'inside_roundabout', distance: 10 })!;
     expect(v).toBeDefined();
     expect(['rb4:f0', 'rb3:f0', 'rb_n:rb3:f0>rb4:f0']).toContain(v.state.laneId ?? v.state.connectorId);
+  });
+
+  it('initial fill: the first update populates the surroundings, some in view 40–200 m ahead, none within 25 m ahead', () => {
+    // player parked at the training-ground start (r00_01:f0, heading south)
+    const h = createTrafficHarness({ seed: 11, density: 0.5, pedestrians: 0.4, playerPos: [-121.5, -90], playerHeading: Math.PI / 2 });
+    h.step();
+    const vehicles = h.traffic.agents.filter((a) => a.kind !== 'pedestrian');
+    const peds = h.traffic.agents.filter((a) => a.kind === 'pedestrian');
+    expect(vehicles.length).toBeGreaterThanOrEqual(20);
+    expect(peds.length).toBeGreaterThanOrEqual(8);
+    const f = forwardOf(h.player.heading);
+    const rel = (p: [number, number]) => {
+      const wx = p[0] - h.player.pos[0];
+      const wz = p[1] - h.player.pos[1];
+      return { along: wx * f[0] + wz * f[1], lateral: Math.abs(wx * f[1] - wz * f[0]), d: dist2(p, h.player.pos) };
+    };
+    let inView = 0;
+    for (const v of vehicles) {
+      const r = rel(v.pos);
+      expect(r.d).toBeGreaterThanOrEqual(INITIAL_FILL.vehicleMinDist - 1);
+      expect(r.d).toBeLessThanOrEqual(SPAWN.vehicleRadius + 1);
+      expect(r.along < 0 || r.along > INITIAL_FILL.clearAheadM || r.lateral > 6).toBe(true);
+      if (r.along > 0 && r.d >= 60 && r.d <= 200 && Math.abs(Math.atan2(r.lateral, r.along)) < SPAWN.viewConeHalfAngle) inView++;
+    }
+    expect(inView).toBeGreaterThanOrEqual(2);
+    for (const p of peds) expect(rel(p.pos).d).toBeGreaterThanOrEqual(INITIAL_FILL.pedestrianMinDist - 1);
+    // the fill happens once; afterwards the steady-state spawner keeps the counts
+    h.run(5);
+    expect(h.traffic.agents.filter((a) => a.kind !== 'pedestrian').length).toBeLessThanOrEqual(SPAWN.maxVehicles);
   });
 
   it('clear_traffic despawns everyone and stops automatic spawning', () => {

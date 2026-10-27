@@ -46,7 +46,12 @@ export function quatFromHeading(heading: number): { x: number; y: number; z: num
 }
 
 export class PhysicsWorld {
-  readonly fixed = new FixedStep(PHYSICS_STEP, 4);
+  /**
+   * Up to 6 sub-steps per frame = 0.1 s, the GameLoop's frame-time clamp: on a slow machine the
+   * car keeps pace with the simulation clock (and with the NPCs, which integrate ctx.dt) instead
+   * of running at 2/3 speed below 15 fps.
+   */
+  readonly fixed = new FixedStep(PHYSICS_STEP, 6);
   /** Seconds of physics simulated so far. */
   time = 0;
   private tags = new Map<number, ColliderTag>();

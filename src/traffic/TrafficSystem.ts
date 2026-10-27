@@ -5,6 +5,9 @@
  *   each frame: traffic.update(ctx)  (reads ctx.player / ctx.localisation, writes ctx.traffic)
  *   traffic.agents → readonly TrafficAgentView[] (stable array instance, reused every frame)
  *
+ * The first update with the player on the road network pre-populates the surroundings
+ * (initial fill: some vehicles and pedestrians 40–200 m away in view, none within 25 m ahead).
+ *
  * Deterministic: all randomness comes from createRng(seed); time from ctx.time / ctx.dt.
  * Listens to `coach:request` (spawn_vehicle, spawn_pedestrian, clear_traffic); the signal
  * requests are handled by SignalSystem.
@@ -12,7 +15,7 @@
 import type { EventBus, SimEventMap } from '@/core/events';
 import { createRng, type SimContext, type System } from '@/core/sim';
 import type { Localisation, TrafficAgentState, VehicleState } from '@/core/types';
-import { forwardOf, type Vec2 } from '@/world/geo';
+import { dist2, forwardOf, type Vec2 } from '@/world/geo';
 import type { RoadGraph } from '@/world/graph';
 import type { WorldFile } from '@/world/schema';
 import { Occupancy, SpatialHash, type Frame, type PlayerInfo, type TrafficAgentView } from './agents';
@@ -21,7 +24,7 @@ import { TrafficNetwork } from './network';
 import { PedestrianAgent, updatePedestrian } from './pedestrians';
 import { SidewalkNetwork } from './sidewalks';
 import type { SignalSystem } from './signals';
-import { spawnPedestrianAuto, spawnScriptedPedestrian, spawnVehicleAuto, spawnVehicleRelative, type Interest, type SpawnHost, type SpawnVehicleOptions } from './spawner';
+import { INITIAL_FILL, spawnPedestrianAuto, spawnScriptedPedestrian, spawnVehicleAuto, spawnVehicleRelative, type Interest, type SpawnHost, type SpawnVehicleOptions } from './spawner';
 import { VehicleAgent, updateVehicle } from './vehicles';
 
 export interface TrafficOptions {
@@ -392,10 +395,38 @@ export class TrafficSystem implements System, SpawnHost {
     return n;
   }
 
+  /**
+   * First update with a player on the road network: populate the surroundings at once —
+   * half of the vehicles / pedestrians in a near band (40–200 m / 15–120 m, view cone allowed,
+   * never within 25 m straight ahead), the rest out to the usual radius — so the world is
+   * alive from the first frame instead of filling in from 120 m away over the first minute.
+   */
+  private initialFill(targetV: number, targetP: number): void {
+    const f = this.frameObj;
+    const centre = this.interestState.centre;
+    const lanes = this.graph.lanesWithin(centre, SPAWN.vehicleRadius, ['drive']);
+    const edges = this.sidewalks.edges.filter((e) => e.kind === 'sidewalk' && (dist2(e.a.pos, centre) <= SPAWN.pedestrianRadius || dist2(e.b.pos, centre) <= SPAWN.pedestrianRadius));
+    const nearV = Math.round(targetV * INITIAL_FILL.nearShare);
+    for (let i = 0; i < targetV && this.vehicleList.length < SPAWN.maxVehicles; i++) {
+      spawnVehicleAuto(this, { lanes, inView: true, minDist: INITIAL_FILL.vehicleMinDist, maxDist: i < nearV ? INITIAL_FILL.vehicleNearMax : SPAWN.vehicleRadius });
+    }
+    const nearP = Math.round(targetP * INITIAL_FILL.nearShare);
+    for (let i = 0; i < targetP && this.pedList.length < SPAWN.maxPedestrians; i++) {
+      spawnPedestrianAuto(this, { sidewalkEdges: edges, inView: true, minDist: INITIAL_FILL.pedestrianMinDist, maxDist: i < nearP ? INITIAL_FILL.pedestrianNearMax : SPAWN.pedestrianRadius });
+    }
+    this.lastVehicleSpawn = f.time;
+    this.lastPedSpawn = f.time;
+  }
+
   private autoSpawn(): void {
     const f = this.frameObj;
     const targetV = Math.round(this.density * SPAWN.maxVehicles);
     const targetP = Math.round(this.pedestrianDensity * SPAWN.maxPedestrians);
+    if (!this.warm && f.player && !this.interestState.offWorld) {
+      this.warm = true;
+      this.initialFill(targetV, targetP);
+      return;
+    }
     let nV = this.countNear(this.vehicleList, SPAWN.vehicleRadius);
     let nP = this.countNear(this.pedList, SPAWN.pedestrianRadius);
     const burstV = this.warm ? 2 : targetV;

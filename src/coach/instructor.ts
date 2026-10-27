@@ -55,6 +55,8 @@ export class Instructor implements System {
   private lastCtx?: SimContext;
   private lastDanger?: DangerPrediction;
   private interventionCount = 0;
+  private pullOutBriefed = false;
+  private pullOutBriefId?: string;
   private readonly offs: (() => void)[] = [];
 
   constructor(
@@ -72,6 +74,8 @@ export class Instructor implements System {
     this.offs.push(
       bus.on('mode:changed', () => {
         this.greeted = false;
+        this.pullOutBriefed = false;
+        this.pullOutBriefId = undefined;
         this.focus.clear();
       }),
     );
@@ -103,6 +107,12 @@ export class Instructor implements System {
     this.greeted = true;
     const key = mode === 'lesson' ? 'greeting.lesson' : mode === 'training_ground' ? 'greeting.training_ground' : 'greeting.free';
     this.dialogue.sayLine(key, undefined, { priority: 2, key: 'greeting', cooldown: 60 });
+    // Free drive starts parked at the kerb: say once what to do before pulling away (the rules
+    // engine does not judge that first move-off — see SignallingDetector). Lessons brief it themselves.
+    if ((mode === 'free' || mode === 'training_ground') && !this.pullOutBriefed) {
+      this.pullOutBriefed = true;
+      this.pullOutBriefId = this.dialogue.sayLine('pull_out.briefing', undefined, { priority: 1, key: 'pull_out.briefing', cooldown: 600 });
+    }
   }
 
   /** Speak 1–3 sentences about the current situation; returns the text. */
@@ -146,6 +156,12 @@ export class Instructor implements System {
   update(ctx: SimContext): void {
     this.lastCtx = ctx;
     if (!this.greeted && this.autoGreet && ctx.coachPresent && (ctx.mode === 'free' || ctx.mode === 'training_ground')) this.greet(ctx.mode);
+    // the pull-out briefing is pointless once the car is already rolling: drop it if it has not started yet
+    if (this.pullOutBriefId && Math.abs(ctx.player.speed) > 1) {
+      const id = this.pullOutBriefId;
+      this.pullOutBriefId = undefined;
+      if (this.dialogue.pending.some((q) => q.id === id)) this.dialogue.cancel(id);
+    }
     if (!this.interventionsEnabled || !ctx.coachPresent || ctx.paused) return;
     if (ctx.time - this.lastInterventionAt < INTERVENTION_INTERVAL) return;
     const preferred = ctx.localisation.laneId ? this.navigator?.expectedConnectorFrom(ctx.localisation.laneId)?.id : undefined;
@@ -203,8 +219,10 @@ export class Instructor implements System {
   }
 
   private textFor(v: Violation, params: LineParams): string {
-    const key = `violation.${v.type}`;
     const lines = this.dialogue.lines;
+    // pulling out of a parking spot shares the lane-change ViolationTypes but is phrased as "יציאה מחניה"
+    const pullOut = v.details?.maneuver === 'pull_out' || v.details?.manoeuvre === 'pull_out';
+    const key = pullOut && lines.has(`violation.${v.type}.pull_out`) ? `violation.${v.type}.pull_out` : `violation.${v.type}`;
     const base = lines.has(key) ? lines.line(key, params) : VIOLATIONS[v.type].advice;
     return v.context && !base.includes(v.context) && this.verbosity === 'high' ? `${base} (${v.context})` : base;
   }

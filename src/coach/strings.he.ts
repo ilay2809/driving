@@ -120,6 +120,11 @@ export const STRINGS_HE: Record<string, LineDef> = {
   'violation.WRONG_GEAR': I('בדוק את ההילוך — לנסיעה קדימה D.'),
   'violation.NO_MIRROR_CHECK': I('לפני התמרון — מראות. הסתכל במראה הפנימית ובמראת הצד.'),
   'violation.NO_SHOULDER_CHECK': I('נקודה מתה! סובב את הראש ובדוק לפני שאתה עובר.'),
+  // pulling out of a parking spot (same ViolationTypes, details.maneuver = 'pull_out')
+  'violation.NO_INDICATOR_LANE_CHANGE.pull_out': I('יצאת מהחניה בלי לאותת. לפני שיוצאים לכביש — איתות שמאלה.'),
+  'violation.NO_MIRROR_CHECK.pull_out': I('יצאת מהחניה בלי לבדוק מראות. מראה פנימית ומראת שמאל לפני שזזים.'),
+  'violation.NO_SHOULDER_CHECK.pull_out': I('יצאת מהחניה בלי מבט לכתף. הנקודה המתה מסתירה את מי שמגיע מאחור.'),
+  'pull_out.briefing': I('לפני שיוצאים מהחניה: חגורה, מראות, איתות שמאלה, מבט לכתף שמאל — וכשפנוי יוצאים בעדינות.'),
   'violation.CENTRE_LINE_CROSSED': I('אתה בצד הנגדי של הכביש! חזור מיד לימין.'),
   'violation.WRONG_WAY': I('זה רחוב חד-סטרי ואתה נגד הכיוון! שים לב לתמרורים.'),
   'violation.ILLEGAL_PARKING': I('כאן אסור לחנות. חפש מקום מותר — לא ליד אבן שפה אדומה-לבנה, ולא קרוב לצומת.'),

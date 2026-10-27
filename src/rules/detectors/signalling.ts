@@ -9,7 +9,12 @@
  *  - Lane changes (the localiser switching to a sibling lane): side indicator on for ≥ 1 s, a
  *    glance at that side's mirror and over that shoulder within the last 5 s.
  *  - Pulling out: moving off after ≥ 3 s standing at the kerb (parked: P / handbrake / engine
- *    off, or stopped with no traffic reason) → same checks towards the traffic side.
+ *    off, or stopped with no traffic reason) → same checks towards the traffic side, reported
+ *    with `details.maneuver = 'pull_out'` (the ViolationTypes stay NO_INDICATOR_LANE_CHANGE /
+ *    NO_MIRROR_CHECK / NO_SHOULDER_CHECK) so the coach can phrase them as "יציאה מחניה".
+ *    In free drive / on the training ground the very first move-off of a session (the car has
+ *    not driven anywhere yet, or the session is < 3 s old) is not judged: nobody has shown the
+ *    pupil the routine yet — the instructor briefs it instead (Instructor 'pull_out.briefing').
  */
 import type { SimContext } from '@/core/sim';
 import type { Connector, Lane } from '@/world/schema';
@@ -32,6 +37,11 @@ const INTERVAL_MEMORY_S = 60;
 /** An indicator switched on up to this long after entering the junction still counts (as late). */
 const LATE_START_GRACE_S = 1.0;
 const NEXT_JUNCTION_INTENT_M = 40;
+/** The first move-off of a free-drive session is briefed, not judged: odometer / age limits. */
+const FIRST_PULL_OUT_ODOMETER_M = 2;
+const FIRST_PULL_OUT_SESSION_S = 3;
+/** Details attached to the three pull-out observations (`manoeuvre` kept for existing readers). */
+const PULL_OUT_DETAILS = { manoeuvre: 'pull_out', maneuver: 'pull_out' } as const;
 
 export class SignallingDetector implements Detector {
   readonly name = 'signalling';
@@ -147,10 +157,16 @@ export class SignallingDetector implements Detector {
     this.turnDone = undefined;
   }
 
-  private checkGlances(api: JudgeApi, dir: Side, context: string | undefined): void {
+  private checkGlances(api: JudgeApi, dir: Side, context: string | undefined, extra: Record<string, string> = {}): void {
     const glances = api.glancesWithin(T.GLANCE_WINDOW_S);
-    if (!glances.some((gl) => gl.target === `${dir}_mirror`)) api.report('NO_MIRROR_CHECK', { details: { side: dir }, context });
-    if (!glances.some((gl) => gl.target === `${dir}_shoulder`)) api.report('NO_SHOULDER_CHECK', { details: { side: dir }, context });
+    if (!glances.some((gl) => gl.target === `${dir}_mirror`)) api.report('NO_MIRROR_CHECK', { details: { side: dir, ...extra }, context });
+    if (!glances.some((gl) => gl.target === `${dir}_shoulder`)) api.report('NO_SHOULDER_CHECK', { details: { side: dir, ...extra }, context });
+  }
+
+  /** Free drive / training ground: the first move-off of the session is briefed by the instructor, not judged. */
+  private isFirstPullOut(ctx: SimContext, api: JudgeApi): boolean {
+    if (ctx.mode !== 'free' && ctx.mode !== 'training_ground') return false;
+    return api.odometer < FIRST_PULL_OUT_ODOMETER_M || api.time < FIRST_PULL_OUT_SESSION_S;
   }
 
   private updatePullOut(ctx: SimContext, api: JudgeApi): void {
@@ -166,11 +182,12 @@ export class SignallingDetector implements Detector {
     if (!this.parked) return;
     if (p.speed > T.PULL_OUT_SPEED_MPS) {
       this.parked = false;
+      if (this.isFirstPullOut(ctx, api)) return;
       const dir: Side = this.parkedSide === 'right' ? 'left' : 'right';
       const context = HE.pullOut;
       const iv = this.intervalActiveAt(dir, api.time, 0);
-      if (!iv) api.report('NO_INDICATOR_LANE_CHANGE', { details: { side: dir, manoeuvre: 'pull_out' }, context });
-      this.checkGlances(api, dir, context);
+      if (!iv) api.report('NO_INDICATOR_LANE_CHANGE', { details: { side: dir, ...PULL_OUT_DETAILS }, context });
+      this.checkGlances(api, dir, context, PULL_OUT_DETAILS);
     } else if (p.speed < -T.PULL_OUT_SPEED_MPS) {
       // reversing out of a bay — the glance rules of the reversing lesson apply instead
       this.parked = false;

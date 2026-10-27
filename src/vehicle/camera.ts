@@ -22,18 +22,27 @@ export interface CameraRigOptions {
   /** Free-look limits (rad). */
   yawMax: number;
   pitchMax: number;
+  /** Resting head pitch (rad, negative = down): a relaxed driver looks slightly below the horizon. */
+  restPitch: number;
   chaseDistance: number;
   chaseHeight: number;
 }
 
+/**
+ * Compact-car seating: the eye 1.22 m above the ground, 0.12 m behind the car centre (≈ 1.17 m
+ * behind the windscreen base, 0.67 m behind the dashboard edge). With a 72° vertical / ≈ 104°
+ * horizontal field of view the bonnet edge sits ≈ 9° below the horizon (road visible from ≈ 6 m
+ * ahead of the bumper), the left door mirror ≈ 33° left and the right one at the right frame edge.
+ */
 export const DEFAULT_CAMERA_OPTIONS: CameraRigOptions = {
-  eye: { x: -0.37, y: 1.15, z: 0.3 },
+  eye: { x: -0.37, y: 1.22, z: -0.12 },
   originHeight: 0.6,
   fov: 72,
   near: 0.1,
   far: 2500,
   yawMax: (120 * Math.PI) / 180,
   pitchMax: (40 * Math.PI) / 180,
+  restPitch: (-2.5 * Math.PI) / 180,
   chaseDistance: 7,
   chaseHeight: 2.6,
 };
@@ -48,9 +57,9 @@ const DEG = Math.PI / 180;
 
 /** Where the head turns for each glance (yaw positive = right). */
 export const GLANCE_PRESETS: Record<GlanceTarget, GlancePreset> = {
-  left_mirror: { yaw: -37 * DEG, pitch: -9 * DEG, seconds: 0.6 },
-  rear_mirror: { yaw: 32 * DEG, pitch: 7 * DEG, seconds: 0.6 },
-  right_mirror: { yaw: 59 * DEG, pitch: -6 * DEG, seconds: 0.6 },
+  left_mirror: { yaw: -33 * DEG, pitch: -12 * DEG, seconds: 0.6 },
+  rear_mirror: { yaw: 31 * DEG, pitch: 8 * DEG, seconds: 0.6 },
+  right_mirror: { yaw: 55 * DEG, pitch: -12 * DEG, seconds: 0.6 },
   left_shoulder: { yaw: -110 * DEG, pitch: -2 * DEG, seconds: 0.7 },
   right_shoulder: { yaw: 110 * DEG, pitch: -2 * DEG, seconds: 0.7 },
   ahead: { yaw: 0, pitch: 0, seconds: 0.3 },
@@ -170,7 +179,7 @@ export class CameraRig {
     this.camera.position.copy(_pos).add(_offset);
 
     _qYaw.setFromAxisAngle(_up, -this.headYaw);
-    _qPitch.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.headPitch + this.extraPitch);
+    _qPitch.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.headPitch + this.extraPitch + this.opts.restPitch);
     this.camera.quaternion.copy(_q).multiply(_qYaw).multiply(_qPitch);
   }
 
