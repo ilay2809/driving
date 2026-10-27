@@ -45,8 +45,10 @@ test.describe('application flow', () => {
     await page.keyboard.press('Space');
     await page.keyboard.up('ArrowDown');
     await page.waitForTimeout(200);
+    // hold the throttle for 4 s of SIMULATION time (software rendering runs slower than wall time)
+    const t0 = await page.evaluate(() => (window as unknown as AppWindow).__app!.session!.ctx.time);
     await page.keyboard.down('ArrowUp');
-    await page.waitForTimeout(5000);
+    await page.waitForFunction((start) => (window as unknown as AppWindow).__app!.session!.ctx.time > start + 4, t0, { timeout: 90_000 });
     await page.keyboard.up('ArrowUp');
     const state = await page.evaluate(() => {
       const w = window as unknown as AppWindow;
