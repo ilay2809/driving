@@ -150,7 +150,7 @@ describe('TrafficSystem — determinism', () => {
     const b = run();
     expect(a.length).toBeGreaterThan(10);
     expect(a).toEqual(b);
-  });
+  }, 30_000); // two full 0.6-density simulations: ≈ 3 s alone, slower when the suite runs in parallel on a loaded box
 });
 
 describe('TrafficSystem — scripted spawns', () => {
@@ -190,6 +190,46 @@ describe('TrafficSystem — scripted spawns', () => {
     const v = h.traffic.spawnVehicle({ where: 'inside_roundabout', distance: 10 })!;
     expect(v).toBeDefined();
     expect(['rb4:f0', 'rb3:f0', 'rb_n:rb3:f0>rb4:f0']).toContain(v.state.laneId ?? v.state.connectorId);
+  });
+
+  it("spawn_vehicle {parked: true} places a stationary car at the right kerb that never drives and does not block the lane", () => {
+    const h = createTrafficHarness({ seed: 3, playerPos: [-62.4, 1.6], playerHeading: 0 }); // r01_11:f0, s ≈ 50
+    h.step();
+    h.bus.emit('coach:request', { kind: 'spawn_vehicle', payload: { where: 'ahead', distance: 30, speedKmh: 0, vehicle: 'car', parked: true, side: 'right', laneId: 'r01_11:f0' } });
+    h.step();
+    const parked = h.traffic.agents.find((a) => a.kind === 'car')!;
+    expect(parked).toBeDefined();
+    expect(parked.laneId).toBe('r01_11:f0');
+    expect(parked.speed).toBe(0);
+    expect((parked as { parked?: boolean }).parked).toBe(true);
+    const lane = h.graph.lane('r01_11:f0');
+    const centre = h.graph.laneAt(lane.id, parked.s!).p;
+    // right of an east-bound lane is +z; the car hugs the kerb (≈ half a lane minus half a car)
+    expect(parked.pos[1] - centre[1]).toBeGreaterThan(0.3);
+    expect(parked.pos[1] - centre[1]).toBeLessThan(lane.width / 2);
+    const pos0: [number, number] = [parked.pos[0], parked.pos[1]];
+    // a moving car between the player and the parked one is not held by it: it passes
+    const mover = h.traffic.spawnVehicle({ where: 'ahead', distance: 18, speedKmh: 30 })!;
+    expect(mover.s).toBeGreaterThan(60);
+    expect(mover.s).toBeLessThan(parked.s!);
+    h.run(2);
+    expect(parked.pos[0]).toBeCloseTo(pos0[0], 3);
+    expect(parked.pos[1]).toBeCloseTo(pos0[1], 3);
+    expect(parked.speed).toBe(0);
+    expect(mover.v).toBeGreaterThan(3);
+    expect(mover.s).toBeGreaterThan(parked.s!);
+  });
+
+  it("the examiner's two parked cars (12 m and 23.4 m ahead) both appear, leaving a 7 m gap", () => {
+    const h = createTrafficHarness({ seed: 3, playerPos: [-62.4, 1.6], playerHeading: 0 }); // r01_11:f0, s ≈ 50
+    h.step();
+    for (const distance of [12, 23]) h.bus.emit('coach:request', { kind: 'spawn_vehicle', payload: { where: 'ahead', distance, speedKmh: 0, vehicle: 'car', parked: true, side: 'right', laneId: 'r01_11:f0' } });
+    h.step();
+    const parked = h.traffic.agents.filter((a) => a.kind === 'car' && (a as { parked?: boolean }).parked).sort((a, b) => a.s! - b.s!);
+    expect(parked.length).toBe(2);
+    expect(parked[0]!.s).toBeCloseTo(62, 0);
+    expect(parked[1]!.s).toBeCloseTo(73, 0);
+    expect(parked[1]!.s! - parked[0]!.s! - parked[0]!.length).toBeGreaterThanOrEqual(6);
   });
 
   it('clear_traffic despawns everyone and stops automatic spawning', () => {

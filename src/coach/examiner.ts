@@ -48,6 +48,10 @@ export interface ExaminerOptions {
   interventions?: boolean;
   /** Arc-length on the last lane where the route ends. */
   endS?: number;
+  /** Route distance (m) the candidate drives before the first manoeuvre may be requested (default 300). */
+  firstManeuverAfter?: number;
+  /** Minimum route distance (m) between manoeuvres (default 300). */
+  maneuverSpacing?: number;
 }
 
 export type ExaminerPhase = 'idle' | 'running' | 'failing' | 'finished';
@@ -81,7 +85,9 @@ interface ActiveManeuver {
 
 const QUIET: Set<RoadClass> = new Set(['residential', 'living_street', 'unclassified', 'tertiary', 'service']);
 const DEFAULT_MANEUVERS: ManeuverKind[] = ['pull_over', 'reverse', 'parallel_park', 'uturn', 'emergency_stop'];
-const MIN_SPACING_M = 120;
+const PRE_DRIVE_IGNORED = new Set<ViolationType>(['PARKING_TOO_FAR', 'ILLEGAL_PARKING', 'ILLEGAL_STOP', 'PARKING_ANGLE']);
+const MIN_SPACING_M = 300;
+const FIRST_MANEUVER_AFTER_M = 300;
 const INTERVENTION_INTERVAL = 4;
 
 export class Examiner implements System {
@@ -108,6 +114,7 @@ export class Examiner implements System {
   private finishReason?: 'destination' | 'timeout' | 'failed';
   private readonly offs: (() => void)[] = [];
   private lastInterventionViolationAt = -Infinity;
+  private hasMoved = false;
 
   constructor(
     private readonly bus: EventBus,
@@ -129,7 +136,7 @@ export class Examiner implements System {
       navigator.onDeviation((d) => {
         if (this.phase !== 'running' && this.phase !== 'failing') return;
         if (this.active) return; // deviations during a manoeuvre (U-turn) are expected
-        this.emitViolation('WRONG_TURN', `${d.junctionId}`);
+        this.emitViolation('WRONG_TURN', this.placeName(d.junctionId));
       }),
     );
   }
@@ -168,6 +175,7 @@ export class Examiner implements System {
 
   update(ctx: SimContext): void {
     this.lastCtx = ctx;
+    if (Math.abs(ctx.player.speed) > 1) this.hasMoved = true;
     if (this.phase === 'idle') this.start(ctx);
     if (this.is('finished') || ctx.paused) return;
     const report = this.parking.update(ctx);
@@ -206,9 +214,11 @@ export class Examiner implements System {
   private start(ctx: SimContext): void {
     this.phase = 'running';
     this.startTime = ctx.time;
+    // 'test:started' first: the UI resets its transient state (subtitles, banner) on it, so the
+    // greeting must come after it or it is wiped at once
+    this.bus.emit('test:started', { routeId: this.routeId });
     this.dialogue.sayLine('examiner.greeting', undefined, { priority: 2, key: 'examiner.greeting', cooldown: 60 });
     this.navigator.setRoute(this.opts.route, { speak: true, who: 'examiner', endS: this.opts.endS });
-    this.bus.emit('test:started', { routeId: this.routeId });
   }
 
   private finish(ctx: SimContext, reason: 'destination' | 'timeout' | 'failed'): void {
@@ -236,6 +246,8 @@ export class Examiner implements System {
 
   private onViolation(v: Violation): void {
     if (this.phase !== 'running' && this.phase !== 'failing') return;
+    // the car waits at the lane centre before the candidate pulls out: that is not parking
+    if (!this.hasMoved && PRE_DRIVE_IGNORED.has(v.type)) return;
     if (v.type === 'EXAMINER_INTERVENTION') {
       // our own emission (or the rules module echoing the intervention): count once per second
       if (v.time - this.lastInterventionViolationAt < 1) return;
@@ -254,6 +266,27 @@ export class Examiner implements System {
     if (!ctx) return;
     const severity = type === 'EXAMINER_INTERVENTION' ? 'critical' : type === 'MISSED_INSTRUCTION' || type === 'WRONG_TURN' ? 'minor' : 'minor';
     this.bus.emit('violation', { type, severity, time: ctx.time, pos: [ctx.player.pos[0], ctx.player.pos[1]], context });
+  }
+
+  /** Where a violation happened, for the result sheet: "בצומת א / ב" or "ברחוב א". */
+  private placeName(junctionId?: string, ctx: SimContext | undefined = this.lastCtx): string | undefined {
+    const lines = this.dialogue.lines;
+    if (junctionId) {
+      const j = this.graph.junctions.get(junctionId);
+      if (j) {
+        const names: string[] = [];
+        for (const a of [...j.approaches, ...j.exits]) {
+          const name = this.graph.roads.get(a.roadId)?.name;
+          if (name && !names.includes(name)) names.push(name);
+          if (names.length === 2) break;
+        }
+        if (names.length > 0) return lines.line('place.junction', { names: names.join(' / ') });
+      }
+    }
+    const laneId = ctx?.localisation.laneId;
+    const street = laneId && this.graph.lanes.has(laneId) ? this.graph.road(this.graph.lane(laneId).roadId).name : undefined;
+    if (street) return lines.line('place.street', { street });
+    return junctionId;
   }
 
   // ---- interventions ----------------------------------------------------------------------
@@ -276,11 +309,14 @@ export class Examiner implements System {
     const wanted = kinds.filter((k) => k !== 'reverse' && k !== 'hill_start');
     const withReverse = kinds.includes('reverse');
     const lanes = this.route.laneSegments();
-    let lastEnd = -Infinity;
+    const spacing = this.opts.maneuverSpacing ?? MIN_SPACING_M;
+    const firstAfter = this.opts.firstManeuverAfter ?? FIRST_MANEUVER_AFTER_M;
+    // the candidate gets going first; manoeuvres are spread along the route and never on the last lane
+    let lastEnd = firstAfter - spacing;
     for (let i = 1; i < lanes.length - 1; i++) {
       if (plan.length >= max) break;
       const seg = lanes[i]!;
-      if (seg.start < lastEnd + MIN_SPACING_M) continue;
+      if (seg.start < lastEnd + spacing) continue;
       const lane = this.graph.lane(seg.id);
       const road = this.graph.road(lane.roadId);
       for (const kind of wanted) {
@@ -421,30 +457,32 @@ export class Examiner implements System {
     this.planCursor = this.plan.indexOf(plan) + 1;
     this.active = { plan, startedAt: ctx.time, startPos: [ctx.player.pos[0], ctx.player.pos[1]], startHeading: ctx.player.heading, stage: 'requested', reversed: 0, maxDrift: 0, minAccel: 0, forwardSinceStart: 0 };
     const lines = this.dialogue.lines;
+    // content may provide richer request lines under "<key>.request"
+    const requestLine = (kind: string) => lines.line(lines.has(`examiner.maneuver.${kind}.request`) ? `examiner.maneuver.${kind}.request` : `examiner.maneuver.${kind}`);
     let text: string;
     switch (plan.kind) {
       case 'emergency_stop':
-        text = lines.line('examiner.maneuver.emergency_stop.prepare');
+        text = lines.has('examiner.maneuver.emergency_stop.request') ? lines.line('examiner.maneuver.emergency_stop.request') : lines.line('examiner.maneuver.emergency_stop.prepare');
         this.active.stage = 'prepare';
         // "עצור!" follows 2–5 s later (seeded), while the lane still has room to stop
         this.active.goAt = ctx.time + 2 + this.rng() * 3;
         this.navigator.setOverride({ kind: 'straight', text: lines.line('nav.hud.straight') });
         break;
       case 'parallel_park':
-        text = lines.line('examiner.maneuver.parallel_park');
-        this.navigator.setOverride({ kind: 'park', text });
+        text = requestLine('parallel_park');
+        this.navigator.setOverride({ kind: 'park', text: lines.line('examiner.maneuver.parallel_park') });
         if (!plan.strip || plan.strip.bays.length === 0) this.requestParkedCars(ctx, plan);
         break;
       case 'uturn':
-        text = lines.line('examiner.maneuver.uturn');
+        text = requestLine('uturn');
         this.navigator.setOverride({ kind: 'uturn', text: lines.line('nav.hud.uturn') });
         break;
       case 'reverse':
-        text = lines.line('examiner.maneuver.reverse');
-        this.navigator.setOverride({ kind: 'reverse', text });
+        text = requestLine('reverse');
+        this.navigator.setOverride({ kind: 'reverse', text: lines.line('examiner.maneuver.reverse') });
         break;
       default:
-        text = lines.line('examiner.maneuver.pull_over');
+        text = requestLine('pull_over');
         this.navigator.setOverride({ kind: 'pull_over', text: lines.line('nav.hud.pull_over') });
     }
     this.dialogue.say({ who: 'examiner', text, priority: 2, key: `examiner.maneuver.${plan.kind}`, cooldown: 5 });
@@ -560,7 +598,7 @@ export class Examiner implements System {
   }
 
   private miss(ctx: SimContext): void {
-    this.emitViolation('MISSED_INSTRUCTION', this.active?.plan.kind);
+    this.emitViolation('MISSED_INSTRUCTION', this.placeName(undefined, ctx));
     this.dialogue.sayLine('examiner.maneuver.missed', undefined, { priority: 1, key: 'examiner.maneuver.missed', cooldown: 10 });
     this.endManeuver('failed', ctx, false);
   }

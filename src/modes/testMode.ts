@@ -6,7 +6,8 @@ import { createRng } from '@/core/sim';
 import type { SimEventMap } from '@/core/events';
 import { TEST_RUBRIC } from '@/rules/violations';
 import type { ManeuverResult } from '@/ui';
-import type { PathResult } from '@/world/graph';
+import type { PathResult, RoadGraph } from '@/world/graph';
+import { projectOntoPolyline } from '@/world/geo';
 import type { Route } from '@/world/schema';
 import { generateRoute } from './routeGen';
 import { parkingReporterFor } from '@/app/parking';
@@ -19,6 +20,24 @@ const MANEUVER_LABELS: Record<string, string> = {
   emergency_stop: 'בלימת חירום',
   hill_start: 'זינוק בעלייה',
 };
+
+/** The route's first turn is a U-turn (the car spawned facing away from the route). */
+export function startsWithUturn(graph: RoadGraph, path: PathResult): boolean {
+  const first = path.connectorIds[0];
+  return !!first && graph.connectors.get(first)?.turn === 'uturn';
+}
+
+/** The lane running the other way on the same road, with the pose facing it at the spawn position. */
+export function oppositeStart(graph: RoadGraph, laneId: string, pos: [number, number]): { laneId: string; pos: [number, number]; heading: number } | undefined {
+  const lane = graph.lane(laneId);
+  const road = graph.road(lane.roadId);
+  const others = road.lanesForward.includes(laneId) ? road.lanesBackward : road.lanesForward;
+  const target = others[others.length - 1]; // rightmost lane of the other direction
+  if (!target) return undefined;
+  const pr = projectOntoPolyline(graph.lane(target).centre, pos);
+  const at = graph.laneAt(target, pr.s);
+  return { laneId: target, pos: at.p, heading: at.h };
+}
 
 export class TestMode {
   private examiner?: Examiner;
@@ -50,12 +69,16 @@ export class TestMode {
 
   async start(choice: { routeId: string | 'random' }): Promise<void> {
     this.lastChoice = choice;
+    // a previous test (restart / "מבחן חדש") must not keep reacting to this one's events
+    this.unsubscribe();
     const app = this.app;
     const world = await getWorld('north-tlv');
     const tests = world.routes.filter((r) => r.kind === 'test');
     const seed = app.nextSeed();
     const rng = createRng(seed);
-    let route: Route | undefined = choice.routeId === 'random' ? tests[Math.floor(rng() * tests.length)] : tests.find((r) => r.id === choice.routeId);
+    // "random" = an unknown route generated on the real network (like a real test); a hand-made
+    // route is only the fallback when the generator cannot produce a long enough one
+    let route: Route | undefined = choice.routeId === 'random' ? undefined : tests.find((r) => r.id === choice.routeId);
     const spawnId = route?.spawnId ?? world.spawnPoints.find((s) => s.id === 'tlv_test_start')?.id ?? world.spawnPoints[0]?.id ?? '';
     const session = await app.createSession({
       world: 'north-tlv',
@@ -68,17 +91,39 @@ export class TestMode {
     });
     if (!session) return;
     const { graph } = session;
-    const startLane = spawnLane(graph, session.spawn.pos, session.spawn.heading);
+    let startLane = spawnLane(graph, session.spawn.pos, session.spawn.heading);
     if (!startLane) {
       app.ui.toast('לא נמצא נתיב בנקודת ההתחלה', 'danger', 6);
       app.toMenu();
       return;
     }
     let path: PathResult | undefined;
-    if (route) path = graph.routeViaJunctions(startLane, route.waypoints) ?? undefined;
-    if (!path) {
+    if (route) {
+      path = graph.routeViaJunctions(startLane, route.waypoints) ?? undefined;
+      // the route leaves the other way: start the car facing that direction instead of
+      // opening the test with a U-turn at the first junction
+      if (path && startsWithUturn(graph, path)) {
+        const flipped = oppositeStart(graph, startLane, session.spawn.pos);
+        const alt = flipped ? graph.routeViaJunctions(flipped.laneId, route.waypoints) : undefined;
+        if (flipped && alt && !startsWithUturn(graph, alt)) {
+          session.vehicle.teleport(flipped.pos, flipped.heading);
+          startLane = flipped.laneId;
+          path = alt;
+        }
+      }
+    }
+    if (!path || (choice.routeId === 'random' && path.length < 3000)) {
       path = generateRoute(graph, startLane, { rng, targetLength: 6500 });
       route = undefined;
+    }
+    if (path.length < 2000 && tests.length > 0) {
+      // the generator got stuck (e.g. a tiny network): fall back to a hand-made route
+      const fallback = tests[Math.floor(rng() * tests.length)]!;
+      const p = graph.routeViaJunctions(startLane, fallback.waypoints);
+      if (p && p.length > path.length) {
+        path = p;
+        route = fallback;
+      }
     }
     const routeName = route?.name ?? 'מסלול אקראי';
     const maneuvers = new Map<string, ManeuverResult>();
@@ -122,9 +167,13 @@ export class TestMode {
   }
 
   dispose(): void {
-    for (const off of this.offs) off();
-    this.offs = [];
+    this.unsubscribe();
     this.examiner?.dispose?.();
     this.examiner = undefined;
+  }
+
+  private unsubscribe(): void {
+    for (const off of this.offs) off();
+    this.offs = [];
   }
 }

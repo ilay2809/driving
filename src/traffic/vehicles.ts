@@ -99,6 +99,8 @@ export class VehicleAgent {
   siren = false;
   /** Seconds spent stuck at the end of a path without continuation (despawn candidate). */
   stuckSeconds = 0;
+  /** Stationary at the kerb (scripted parked car): never drives, never a leader for others. */
+  parked = false;
   /** Colour index for the renderer (0..7 cars, palette per kind). */
   readonly colour: number;
   /** Path sample cache for corridor checks (rebuilt each frame). */
@@ -377,6 +379,22 @@ export function placeOnSegment(agent: VehicleAgent, seg: Seg, s: number, speed: 
   else ensurePath(agent, frame);
   updatePose(agent, frame);
   writeState(agent, frame);
+}
+
+/** Park a stationary car at the kerb of a lane (the examiner's parallel-parking gap). */
+export function parkOnSegment(agent: VehicleAgent, seg: Seg, s: number, side: 'right' | 'left', frame: Frame): void {
+  placeOnSegment(agent, seg, s, 0, frame);
+  agent.parked = true;
+  agent.v = 0;
+  agent.a = 0;
+  const width = seg.kind === 'lane' ? seg.lane!.width : 3.2;
+  const offset = Math.max(0, width / 2 - agent.width / 2 - 0.15);
+  agent.lateral = side === 'right' ? offset : -offset;
+  agent.lateralStart = agent.lateral;
+  updatePose(agent, frame);
+  updateIndicator(agent, frame);
+  writeState(agent, frame);
+  agent.state.parked = true;
 }
 
 function replanFromCurrentLane(agent: VehicleAgent, frame: Frame, preferRoadId?: string): void {
@@ -965,7 +983,7 @@ function corridorObstacles(agent: VehicleAgent, frame: Frame, out: Obstacle[]): 
     outer2: for (const smp of samples) {
       if (smp.d > 32) break;
       for (const o of others) {
-        if (o === agent) continue;
+        if (o === agent || o.parked) continue; // parked cars sit at the kerb: pass them
         if (pointInObb(smp.p, o.obb, margin)) {
           const fwd = forwardOf(smp.h);
           const vAlong = o.vel[0] * fwd[0] + o.vel[1] * fwd[1];
@@ -1015,6 +1033,13 @@ export function updateVehicle(agent: VehicleAgent, frame: Frame): void {
   agent.hold = false;
   agent.holdReason = undefined;
   agent.yielding = false;
+  if (agent.parked) {
+    agent.v = 0;
+    agent.a = 0;
+    agent.vel = [0, 0];
+    writeState(agent, frame);
+    return;
+  }
   ensurePath(agent, frame);
   if (agent.seg.kind === 'lane') updateLaneChange(agent, frame);
 

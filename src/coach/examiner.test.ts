@@ -110,7 +110,7 @@ describe('Examiner', () => {
   it('requests an emergency stop on a straight quiet lane and judges the deceleration', () => {
     const t = createTestContext({ mode: 'test' });
     const path = t.graph.findPath('r00_10:f0', 'r22_23:f0')!;
-    const s = setup(path, { maneuvers: ['emergency_stop'], seed: 3 }, t);
+    const s = setup(path, { maneuvers: ['emergency_stop'], seed: 3, firstManeuverAfter: 0 }, t);
     expect(s.ex.plan.map((p) => `${p.kind}@${p.laneId}`)).toEqual(['emergency_stop@r10_20:f0']);
     s.t.placeOnRoute(s.model, 10, 0);
     expect(driveUntil(s, 12, () => s.maneuvers().length > 0, 60)).toBe(true);
@@ -135,7 +135,7 @@ describe('Examiner', () => {
   it('requests parallel parking at a strip and asks traffic for two parked cars when there are no bays', () => {
     const t = createTestContext({ mode: 'test' });
     const path = t.graph.findPath('r00_10:b0', 'r01_02:f0')!;
-    const s = setup(path, { maneuvers: ['parallel_park'] }, t);
+    const s = setup(path, { maneuvers: ['parallel_park'], firstManeuverAfter: 0 }, t);
     expect(s.ex.plan.map((p) => `${p.kind}@${p.laneId}`)).toEqual(['parallel_park@r00_01:f0']);
     s.t.placeOnRoute(s.model, 60, 0);
     expect(driveUntil(s, 10, () => s.maneuvers().length > 0, 60)).toBe(true);
@@ -170,7 +170,7 @@ describe('Examiner', () => {
     const world = buildWorld(input);
     const t = createTestContext({ mode: 'test', world, spawnId: 'sp' });
     const path = t.graph.findPath('ab:f1', 'cd:f1')!;
-    const s = setup(path, { maneuvers: ['uturn'] }, t);
+    const s = setup(path, { maneuvers: ['uturn'], firstManeuverAfter: 0 }, t);
     expect(s.ex.plan.map((p) => `${p.kind}@${p.laneId}`)).toEqual(['uturn@bc:f1']);
     s.t.placeOnRoute(s.model, 20, 0);
     expect(driveUntil(s, 12, () => s.maneuvers().length > 0, 60)).toBe(true);
@@ -238,5 +238,51 @@ describe('Examiner', () => {
     expect(s.ex.state).toBe('finished');
     expect(s.ex.reason).toBe('timeout');
     expect(spokenTexts(s.t).some((x) => x.includes('הזמן נגמר'))).toBe(true);
+  });
+
+  it("emits 'test:started' before the greeting so the UI's reset on it does not wipe the greeting", () => {
+    const s = setup();
+    s.t.placeOnRoute(s.model, 29.5, 0);
+    s.t.step(0.1, s.systems);
+    const order = s.t.events.filter((e) => e.name === 'test:started' || e.name === 'coach:say').map((e) => e.name);
+    expect(order[0]).toBe('test:started');
+    expect(order[1]).toBe('coach:say');
+  });
+
+  it('ignores parking verdicts while the candidate has not pulled out yet, but not afterwards', () => {
+    const s = setup();
+    s.t.placeOnRoute(s.model, 29.5, 0);
+    s.t.step(0.1, s.systems);
+    s.violation('PARKING_TOO_FAR');
+    expect(s.ex.scorer.violations).toEqual([]);
+    s.t.drive(s.model, 8, 2, s.systems);
+    s.t.placeOnRoute(s.model, 60, 0);
+    s.t.step(0.1, s.systems);
+    s.violation('PARKING_TOO_FAR');
+    expect(s.ex.scorer.violations.map((v) => v.type)).toEqual(['PARKING_TOO_FAR']);
+  });
+
+  it('records a wrong turn with a readable place (junction street names) and prefers content ".request" lines', () => {
+    const s = setup();
+    s.dm.lines.add([{ key: 'examiner.maneuver.pull_over.request', who: 'examiner', variants: ['בבקשה לעצור בצד ימין במקום המותר הראשון.'] }]);
+    s.t.placeOnRoute(s.model, 29.5, 0);
+    s.t.step(0.1, s.systems);
+    // leave the route at the first junction: the navigator reports the deviation, the examiner records WRONG_TURN
+    const first = s.route.connectorIds[0]!;
+    const conn = s.t.graph.connector(first);
+    const other = s.t.graph.connectorsFrom(conn.fromLane).find((c) => c.id !== first)!;
+    s.t.placeOnLane(conn.fromLane, s.t.graph.lane(conn.fromLane).length - 1, { speed: 5 });
+    s.t.step(0.1, s.systems);
+    const mid = other.path[Math.floor(other.path.length / 2)]!;
+    s.t.place(mid, Math.atan2(other.path[other.path.length - 1]![1] - mid[1], other.path[other.path.length - 1]![0] - mid[0]), 5);
+    s.t.step(0.1, s.systems);
+    s.t.step(0.1, s.systems);
+    const wrong = s.ex.scorer.violations.find((v) => v.type === 'WRONG_TURN');
+    expect(wrong).toBeDefined();
+    expect(wrong!.context).toMatch(/^בצומת .+/);
+    expect(wrong!.context).not.toMatch(/^n\d/);
+    // the kerb-stop request uses the richer content line when one is loaded
+    expect(driveUntil(s, 10, () => s.maneuvers().length > 0, 200)).toBe(true);
+    expect(s.maneuvers()[0]!.text).toBe('בבקשה לעצור בצד ימין במקום המותר הראשון.');
   });
 });

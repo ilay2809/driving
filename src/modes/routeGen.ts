@@ -15,6 +15,7 @@ export interface RouteGenOptions {
   avoidKinds?: string[];
 }
 
+const FAST_ROADS = new Set<string>(['motorway', 'motorway_link']);
 const TURN_WEIGHT: Record<string, number> = { straight: 1.0, slight_left: 0.8, slight_right: 0.8, left: 0.6, right: 0.7, sharp_left: 0.3, sharp_right: 0.3, uturn: 0.02, merge_left: 0.8, merge_right: 0.8 };
 
 export function generateRoute(graph: RoadGraph, startLaneId: string, opts: RouteGenOptions): PathResult {
@@ -23,11 +24,27 @@ export function generateRoute(graph: RoadGraph, startLaneId: string, opts: Route
   const laneIds: string[] = [startLaneId];
   const connectorIds: string[] = [];
   const recent: string[] = [];
+  const escapeMemo = new Map<string, boolean>();
   let length = graph.lane(startLaneId).length;
   let cur = startLaneId;
   let guard = 0;
-  while (length < target && guard++ < 2000) {
-    const options = graph.connectorsFrom(cur).filter((c) => !avoid.has(graph.lane(c.toLane).kind));
+  while (guard++ < 2000) {
+    // finish on a quiet, reasonably long street (not a junction stub or a dead end) so the
+    // examiner can ask to pull over at the end: up to +800 m for a residential street,
+    // +1.5 km for any proper street
+    if (length >= target && (goodFinish(graph, cur, length < target + 800) || length >= target + 1500)) break;
+    let options = graph.connectorsFrom(cur);
+    // excluded lane kinds and motorways (not part of a city test; trunk roads such as דרך
+    // נמיר are, but rarely) are only entered when there is no other way
+    const city = options.filter((c) => !blocked(graph, c.toLane, avoid));
+    if (city.length > 0) options = city;
+    // a U-turn is only ever the last resort (dead end / no other way out), and a lane whose
+    // only way out is a U-turn or a motorway ramp (a cul-de-sac pocket) is not entered when
+    // there is a choice
+    const noUturn = options.filter((c) => c.turn !== 'uturn');
+    if (noUturn.length > 0) options = noUturn;
+    const onward = options.filter((c) => escapes(graph, c.toLane, avoid, 5, escapeMemo));
+    if (onward.length > 0) options = onward;
     if (options.length === 0) break;
     const weighted = options.map((c) => ({ c, w: weightOf(c, recent, graph) }));
     const total = weighted.reduce((s, x) => s + x.w, 0);
@@ -46,22 +63,46 @@ export function generateRoute(graph: RoadGraph, startLaneId: string, opts: Route
     recent.push(graph.lane(chosen.toLane).roadId);
     if (recent.length > 12) recent.shift();
     cur = chosen.toLane;
-    // finish on a quiet street so the examiner can ask to pull over
-    if (length >= target && graph.road(graph.lane(cur).roadId).cls !== 'residential') {
-      // allow up to +1.5 km to find a residential street
-      if (length < target + 1500) continue;
-    }
   }
   return { laneIds, connectorIds, length };
+}
+
+function blocked(graph: RoadGraph, laneId: string, avoid: Set<string>): boolean {
+  const lane = graph.lane(laneId);
+  return avoid.has(lane.kind) || FAST_ROADS.has(graph.road(lane.roadId).cls);
+}
+
+/**
+ * The lane leads somewhere: within `depth` junctions there is a way on without a U-turn
+ * (cul-de-sac pockets — clusters of dead-end streets — force U-turns and are avoided).
+ */
+function escapes(graph: RoadGraph, laneId: string, avoid: Set<string>, depth: number, memo: Map<string, boolean>): boolean {
+  const key = `${laneId}@${depth}`;
+  const known = memo.get(key);
+  if (known !== undefined) return known;
+  const next = graph.connectorsFrom(laneId).filter((c) => c.turn !== 'uturn' && !blocked(graph, c.toLane, avoid));
+  let ok: boolean;
+  if (next.length === 0) ok = false;
+  else if (depth <= 1) ok = true;
+  else ok = next.some((c) => escapes(graph, c.toLane, avoid, depth - 1, memo));
+  memo.set(key, ok);
+  return ok;
+}
+
+function goodFinish(graph: RoadGraph, laneId: string, residentialOnly: boolean): boolean {
+  const lane = graph.lane(laneId);
+  if (lane.length < 40) return false;
+  if (graph.junction(lane.to).kind === 'dead_end') return false;
+  return !residentialOnly || graph.road(lane.roadId).cls === 'residential';
 }
 
 function weightOf(c: Connector, recent: string[], graph: RoadGraph): number {
   let w = TURN_WEIGHT[c.turn] ?? 0.5;
   const road = graph.road(graph.lane(c.toLane).roadId);
   if (road.cls === 'motorway' || road.cls === 'trunk') w *= 0.05; // not part of a city test
-  if (road.cls === 'service') w *= 0.3;
+  if (road.cls === 'service') w *= 0.15; // car parks / alleys: rarely part of a test
   if (recent.includes(road.id)) w *= 0.15; // avoid loops
   const dead = graph.junction(graph.lane(c.toLane).to).kind === 'dead_end';
-  if (dead) w *= 0.05;
+  if (dead) w *= 0.01; // a dead end forces a U-turn
   return w;
 }
