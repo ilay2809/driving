@@ -16,8 +16,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate for deployment: static checks, unit tests, build, and the fast e2e smoke specs.
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -31,11 +33,11 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
-      - name: Build (root base path, for the e2e suite)
+      - name: Build (root base path, for the e2e smoke specs)
         run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
-      - name: End-to-end (headless WebGL via SwiftShader)
-        run: pnpm exec playwright test
+      - name: End-to-end smoke (headless WebGL via SwiftShader)
+        run: pnpm exec playwright test tests/e2e/smoke.spec.ts tests/e2e/app.spec.ts tests/e2e/app-tlv.spec.ts
         env:
           CI: 'true'
       - name: Build (GitHub Pages base path)
@@ -43,6 +45,28 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+  # Long scenario specs (lessons, full examiner test, theory/shell, driving feel, vehicle harness).
+  # Reported separately so a slow or flaky scenario never blocks the Pages deployment.
+  e2e-scenarios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end scenarios
+        run: pnpm exec playwright test tests/e2e/lessons.spec.ts tests/e2e/test-mode.spec.ts tests/e2e/theory-shell.spec.ts tests/e2e/driving-feel.spec.ts tests/e2e/vehicle.spec.ts
+        env:
+          CI: 'true'
 
   deploy:
     if: github.ref == 'refs/heads/main'
