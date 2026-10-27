@@ -20,6 +20,7 @@ export { icon, iconHtml, navIcon, isIconName, ICON_PATHS, type IconName, type Ic
 export { renderDiagram, isDiagramId, DIAGRAM_IDS, type DiagramId } from './diagrams';
 export { signImage, signPlaceholder, signCategoryFromCode, signSrc } from './signImage';
 export { renderMarkdown, markdownHtml } from './markdown';
+export { keymapHelp, keyLabel, type KeyBindingLike } from './keymapHelp';
 export { formatDistance, formatNavDistance, formatClock, formatDuration, formatDateHe, formatHour } from './format';
 export { summarise as summariseTheoryQuiz, questionCard, PASS_RATIO, DEFAULT_EXAM_SECONDS } from './screens/theoryQuiz';
 export { filterSigns } from './screens/signLibrary';

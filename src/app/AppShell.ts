@@ -7,8 +7,8 @@ import { EventBus } from '@/core/events';
 import { loadSettings, saveSettings } from '@/core/settings';
 import type { Settings, System } from '@/core/sim';
 import { Profile } from '@/coach';
-import { UISystem } from '@/ui';
-import { describeGamepads } from '@/vehicle';
+import { UISystem, keymapHelp, strings as uiStrings } from '@/ui';
+import { describeGamepads, KEYMAP, KEY_LABELS_HE } from '@/vehicle';
 import { ContentStore } from './content';
 import { WorldSession, type SessionOptions } from './WorldSession';
 import { LessonMode } from '@/modes/lessonMode';
@@ -55,6 +55,8 @@ export class AppShell {
     this.profile = await Profile.getOrCreate();
     this.profile.attach(this.bus);
     this.ui = new UISystem(this.uiRoot, this.bus, this.settings, { instructorName: this.instructorName, globalKeys: true });
+    // F1 help shows the real key map (the vehicle module's KEYMAP) plus the coach's "explain here" key.
+    this.ui.setHelp({ keymap: [...keymapHelp(KEYMAP, KEY_LABELS_HE), { keys: ['?'], action: uiStrings.HELP.explain }] });
     this.showMainMenu();
   }
 
@@ -132,11 +134,20 @@ export class AppShell {
   }
 
   endSession(): void {
-    if (this.session) {
-      this.session.dispose();
-      this.session = null;
+    const session = this.session;
+    this.session = null;
+    if (session) {
+      try {
+        session.dispose();
+      } catch (err) {
+        // A failing disposer must never leave the app stuck on a dead, paused session.
+        console.error('[app] session dispose failed', err);
+      }
     }
-    this.ui.setRoute(null);
+    // Nothing of the old drive (subtitles, law-monitor chips, nav banner, route) may leak into the next one,
+    // and the last rendered frame must not linger behind the menu.
+    this.ui.clearTransient();
+    if (session) this.renderer.clear();
   }
 
   /** Back to the main menu from anywhere. */
@@ -155,7 +166,8 @@ export class AppShell {
       update: () => {
         const st = session.input.state;
         if (st.pause && !prevPause) this.togglePause();
-        if (st.help && !prevHelp && !session.paused) this.ui.pushScreen('help', { onClose: () => this.ui.popScreen() });
+        // Keyboard F1 is handled by the UI itself; this covers gamepad / wheel "help" buttons (showHelp is a no-op when open).
+        if (st.help && !prevHelp && !session.paused) this.ui.showHelp();
         prevPause = st.pause;
         prevHelp = st.help;
       },
@@ -182,7 +194,7 @@ export class AppShell {
       },
       onSettings: () => this.showSettings(),
       onMenu: () => this.toMenu(),
-      onHelp: () => this.ui.pushScreen('help', { onClose: () => this.ui.popScreen() }),
+      onHelp: () => this.ui.showHelp(),
     });
   }
 

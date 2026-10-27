@@ -254,18 +254,33 @@ export class WorldSession {
     this.disposed = true;
     this.loop.stop();
     for (const d of this.disposers) d();
-    for (const s of [...this.modeSystems, ...this.systems]) s.dispose?.();
-    this.dialogue.dispose?.();
-    this.judge.dispose?.();
-    this.traffic.dispose();
-    this.signals.dispose();
-    this.trafficRenderer.dispose();
-    this.worldRenderer.dispose();
-    this.mirrors.dispose();
-    this.audio.dispose();
-    this.input.dispose();
-    this.vehicle.dispose();
-    this.physics.dispose();
+    // Every object is disposed exactly once: the input, vehicle, localiser, signals, judge,
+    // dialogue and navigator are already in `systems` (disposing the vehicle twice frees its
+    // Rapier body twice and traps the WASM runtime). One failing disposer must not stop the
+    // rest, otherwise the renderer / physics would leak into the next session.
+    const seen = new Set<object>();
+    const once = (target: { dispose?: () => void } | undefined, name: string) => {
+      if (!target || seen.has(target)) return;
+      seen.add(target);
+      try {
+        target.dispose?.();
+      } catch (err) {
+        console.error(`[session] dispose of ${name} failed`, err);
+      }
+    };
+    this.modeSystems.forEach((s) => once(s, s.name));
+    this.systems.forEach((s) => once(s, s.name));
+    once(this.dialogue, 'dialogue');
+    once(this.judge, 'judge');
+    once(this.traffic, 'traffic');
+    once(this.signals, 'signals');
+    once(this.trafficRenderer, 'traffic-renderer');
+    once(this.worldRenderer, 'world-renderer');
+    once(this.mirrors, 'mirrors');
+    once(this.audio, 'audio');
+    once(this.input, 'input');
+    once(this.vehicle, 'vehicle');
+    once(this.physics, 'physics');
     this.scene.clear();
   }
 }

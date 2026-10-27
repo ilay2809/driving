@@ -197,7 +197,7 @@ export const TEST_INTRO = {
       bullets: [
         'משך המבחן כ-20–30 דקות של נהיגה ברחובות צפון תל אביב.',
         'הבוחן מכריז את ההוראה מראש: "בצומת הבא פנה ימינה", "המשך ישר", "עצור בצד". אם לא שמעת — אפשר לבקש לחזור על ההוראה.',
-        'לפני היציאה לדרך: חגורה חגורה, מראות מכוונות, בלם חניה משוחרר, הילוך D.',
+        'לפני היציאה לדרך: חגורת הבטיחות חגורה, המראות מכוונות, בלם החניה משוחרר והילוך D משולב.',
         'בכל שלב נהג לפי התמרורים, הרמזורים והסימון על הכביש — גם אם ההוראה לא ציינה זאת.',
       ],
     },
@@ -347,9 +347,9 @@ export const SETTINGS = {
   subtitles: 'כתוביות',
   driving: 'נהיגה',
   steeringAssist: 'עזרת היגוי (מקלדת)',
-  steeringHint: '0 = היגוי ישיר, 100 = החלקה חזקה',
+  steeringHint: '0 = היגוי ישיר וחד, 100 = היגוי מרוכך ויציב',
   mirrors: 'מראות',
-  mirrorsHint: 'ביטול המראות משפר ביצועים',
+  mirrorsHint: 'כיבוי המראות משפר את הביצועים במחשבים חלשים',
   display: 'תצוגה',
   quality: 'איכות גרפיקה',
   qualityOptions: { low: 'נמוכה', medium: 'בינונית', high: 'גבוהה' } as Record<string, string>,
@@ -365,6 +365,23 @@ export const SETTINGS = {
   autoDetect: 'זיהוי אוטומטי — חבר בקר או הגה והוא יזוהה',
 };
 
+/** Readable labels for `KeyboardEvent.code` values that are not a single letter / digit. */
+export const KEY_CODE_LABELS: Record<string, string> = {
+  ArrowUp: '↑',
+  ArrowDown: '↓',
+  ArrowLeft: '←',
+  ArrowRight: '→',
+  Space: 'רווח',
+  Enter: 'Enter',
+  Escape: 'Esc',
+  Shift: 'Shift',
+  ShiftLeft: 'Shift',
+  ShiftRight: 'Shift',
+  Tab: 'Tab',
+  Backspace: 'Backspace',
+  MouseDrag: 'גרירת עכבר',
+};
+
 export const HELP = {
   title: 'עזרה — מקשים ובקרה',
   keyboard: 'מקלדת',
@@ -373,27 +390,36 @@ export const HELP = {
   colKeys: 'מקש',
   colAction: 'פעולה',
   close: 'סגור (F1 / Esc)',
+  /** The "explain here" key is handled by the coach, not the input system. */
+  explain: 'בקש הסבר מהמורה על המקום שבו אתה נמצא',
+  /** Fallback when the app does not pass the real key map (kept in sync with src/vehicle/keymap.ts). */
   defaultKeymap: [
     { keys: ['↑', 'W'], action: 'גז' },
     { keys: ['↓', 'S'], action: 'בלם' },
-    { keys: ['←', '→', 'A', 'D'], action: 'היגוי' },
-    { keys: ['רווח'], action: 'בלם חניה' },
+    { keys: ['←', 'A'], action: 'הגה שמאלה' },
+    { keys: ['→', 'D'], action: 'הגה ימינה' },
+    { keys: ['רווח'], action: 'בלם יד (הפעלה/שחרור)' },
+    { keys: ['I'], action: 'התנעה / כיבוי מנוע (עם בלם לחוץ)' },
+    { keys: ['P', 'R', 'N', 'D'], action: 'ידית הילוכים (בעצירה בלבד)' },
+    { keys: ['Shift + ↑', 'Shift + ↓'], action: 'ידית הילוכים למעלה / למטה (P-R-N-D)' },
+    { keys: ['B'], action: 'חגורת בטיחות' },
     { keys: ['Q'], action: 'איתות שמאלה' },
     { keys: ['E'], action: 'איתות ימינה' },
-    { keys: ['Z'], action: 'איתות חירום' },
-    { keys: ['Shift + ↑/↓'], action: 'החלפת הילוך (P R N D)' },
-    { keys: ['B'], action: 'חגורת בטיחות' },
-    { keys: ['L'], action: 'אורות' },
+    { keys: ['X'], action: 'מהבהבי חירום' },
+    { keys: ['L'], action: 'אורות (כבוי / חניה / נמוך / גבוה)' },
+    { keys: ['V'], action: 'מגבים' },
+    { keys: ['H'], action: 'צופר (החזקה)' },
     { keys: ['1', '2', '3'], action: 'מבט במראה שמאלית / פנימית / ימנית' },
-    { keys: ['4', '5'], action: 'מבט מעבר לכתף שמאל / ימין' },
-    { keys: ['H'], action: 'צופר' },
-    { keys: ['?'], action: 'בקש הסבר מהמורה' },
-    { keys: ['R'], action: 'חזור על ההוראה האחרונה' },
+    { keys: ['Z', 'C'], action: 'מבט מעבר לכתף שמאל / ימין' },
+    { keys: ['גרירת עכבר'], action: 'מבט חופשי' },
+    { keys: ['F3'], action: 'מצלמה חיצונית / פנימית' },
+    { keys: ['?'], action: 'בקש הסבר מהמורה על המקום שבו אתה נמצא' },
+    { keys: ['Enter'], action: 'אישור / המשך' },
     { keys: ['Esc'], action: 'השהיה / תפריט' },
     { keys: ['F1'], action: 'עזרה' },
   ],
-  defaultGamepadNotes: ['מקל שמאלי — היגוי · R2 גז · L2 בלם', 'כפתורי הכתף — איתותים · X חגורה · Y אורות', 'מקל ימני — מבט במראות ומעבר לכתף'],
-  defaultWheelNotes: ['הגה עם דוושות מזוהה אוטומטית (כולל משוב כוח אם נתמך)', 'ידיות האיתות שליד ההגה — איתות; כפתורי ההגה — הילוכים'],
+  defaultGamepadNotes: ['סטיק שמאלי — היגוי · R2 גז · L2 בלם', 'כפתורי הכתף — איתותים · X חגורה · Y אורות', 'סטיק ימני — מבט במראות ומעבר לכתף'],
+  defaultWheelNotes: ['הגה עם דוושות מזוהה אוטומטית (כולל משוב כוח, אם נתמך)', 'ידיות האיתות שליד ההגה — איתות; כפתורי ההגה — הילוכים'],
 };
 
 export const PAUSE = {
